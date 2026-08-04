@@ -106,8 +106,21 @@ class TradeView(discord.ui.View):
 
     @discord.ui.button(label="Bevestigen", style=discord.ButtonStyle.success)
     async def accept_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.channel.send(content=f'{interaction.user.mention} wilt **{self.give}** weggeven en **{self.receive}** ontvangen in **{self.clan }**.', embed=None, view=None)
-        await interaction.response.defer()
+
+        await interaction.response.edit_message(content="Je ruilvoorstel is verzonden!", embed=None, view=None)
+
+        embed = discord.Embed(
+            title="Kaarten ruilen voor het Clash of Cards evenement",
+            description=(
+                f"{interaction.user.mention} heeft het volgende voorstel gedaan:\n\n"
+                ),
+            color=discord.Color.orange()
+        )
+
+        embed.add_field(name="Kaart die wordt weggegeven", value=f'• {self.give}', inline=True)
+        embed.add_field(name="Kaart die wordt ontvangen", value=f'• {self.receive}', inline=True)
+
+        await interaction.channel.send(embed=embed)
 
     @discord.ui.button(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
     async def cancel_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
