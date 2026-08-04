@@ -121,13 +121,15 @@ class TradeView(discord.ui.View):
 
     def __init__(self, color, cards):
         super().__init__(timeout=300)
-        self.give = None
-        self.receive = None
+        self.give = []
+        self.receive = []
         self.clan_tag = None
         self.clan_name = None
 
         self.color = color
         self.cards = cards
+
+        max_values = len(cards)
 
         # Selects
 
@@ -135,7 +137,7 @@ class TradeView(discord.ui.View):
             placeholder="Kies de kaart die je wilt weggeven",
             options=[discord.SelectOption(label=card) for card in cards],
             min_values=1,
-            max_values=1
+            max_values=max_values
         )
 
         self.give_select.callback = self.give_select_callback
@@ -145,7 +147,7 @@ class TradeView(discord.ui.View):
             placeholder="Kies de kaart die je wilt ontvangen",
             options=[discord.SelectOption(label=card) for card in cards],
             min_values=1,
-            max_values=1
+            max_values=max_values
         )
 
         self.receive_select.callback = self.receive_select_callback
@@ -183,11 +185,11 @@ class TradeView(discord.ui.View):
     # Callbacks
 
     async def give_select_callback(self, interaction: discord.Interaction):
-        self.give = self.give_select.values[0]
+        self.give = self.give_select.values
         await interaction.response.defer()
 
     async def receive_select_callback(self, interaction: discord.Interaction):
-        self.receive = self.receive_select.values[0] 
+        self.receive = self.receive_select.values 
         await interaction.response.defer()
 
     async def clan_select_callback(self, interaction: discord.Interaction):
@@ -211,8 +213,8 @@ class TradeView(discord.ui.View):
         view = discord.ui.View()
         view.add_item(visit_clan_button)
 
-        embed.add_field(name="Weggeven", value=f'• {self.give}', inline=True)
-        embed.add_field(name="Ontvangen", value=f'• {self.receive}', inline=True)
+        embed.add_field(name="Weggeven", value="\n".join(f"• {card}" for card in self.give), inline=True)
+        embed.add_field(name="Ontvangen", value="\n".join(f"• {card}" for card in self.receive), inline=True)
 
         await interaction.channel.send(embed=embed, view=view)
 
