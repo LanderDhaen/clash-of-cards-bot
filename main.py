@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 import logging
 from dotenv import load_dotenv
@@ -218,7 +219,7 @@ class TradeView(discord.ui.View):
 
 # Functions
 
-async def trade(interaction: discord.Interaction, color, cards):
+async def build_trade(interaction: discord.Interaction, color, cards):
     embed = discord.Embed(
         title="Clash of Cards",
         description=(
@@ -239,23 +240,24 @@ async def sync(ctx):
     await bot.tree.sync(guild=GUILD)
     await ctx.send('Synced!')
 
+trade = app_commands.Group(name="trade", description="Wissel kaarten uit voor het Clash of Cards evenement")
 
-
-@bot.tree.command(name="trade-elixir", description="Wissel elixirkaarten uit voor het Clash of Cards evenement", guild=GUILD)
+@trade.command(name="elixir", description="Wissel elixirkaarten uit voor het Clash of Cards evenement")
 async def trade_elixir(interaction: discord.Interaction):
-    await trade(interaction, discord.Color.pink(), elixir)
+    await build_trade(interaction, discord.Color.pink(), elixir)
 
-@bot.tree.command(name="trade-dark-elixir", description="Wissel duister-elixirkaarten uit voor het Clash of Cards evenement", guild=GUILD)
+@trade.command(name="dark-elixir", description="Wissel duister-elixirkaarten uit voor het Clash of Cards evenement")
 async def trade_dark_elixir(interaction: discord.Interaction):
-    await trade(interaction, discord.Color.dark_purple(), dark_elixir)
+    await build_trade(interaction, discord.Color.dark_purple(), dark_elixir)
 
-@bot.tree.command(name="trade-builder-base", description="Wissel bouwersbasiskaarten uit voor het Clash of Cards evenement", guild=GUILD)
+@trade.command(name="builder-base", description="Wissel bouwersbasiskaarten uit voor het Clash of Cards evenement")
 async def trade_builder_base(interaction: discord.Interaction):
-    await trade(interaction, discord.Color.blue(), builder_base)
+    await build_trade(interaction, discord.Color.blue(), builder_base)
 
-@bot.tree.command(name="trade-super-troop", description="Wissel supertroepkaarten uit voor het Clash of Cards evenement", guild=GUILD)
+@trade.command(name="super-troop", description="Wissel supertroepkaarten uit voor het Clash of Cards evenement")
 async def trade_super_troop(interaction: discord.Interaction):
-    await trade(interaction, discord.Color.orange(), super_troop)
+    await build_trade(interaction, discord.Color.orange(), super_troop)
 
+bot.tree.add_command(trade, guild=GUILD)
 
 bot.run(TOKEN, log_handler=handler, log_level=logging.DEBUG)
