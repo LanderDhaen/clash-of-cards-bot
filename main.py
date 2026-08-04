@@ -4,6 +4,8 @@ from discord.ext import commands
 import logging
 
 from config import (TOKEN, GUILD, ROLE_ID)
+from data.clans import CLANS
+from data.cards import ELIXIR, DARK_ELIXIR, BUILDER_BASE, SUPER_TROOP
 
 # Logging
 
@@ -22,93 +24,6 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 @bot.event
 async def on_ready(): 
     print(f'Ready to roll, {bot.user.name}!')
-
-# Lists
-
-elixir = [
-    "Barbarian",
-    "Archer",
-    "Giant",
-    "Goblin",
-    "Wall Breaker",
-    "Balloon",
-    "Wizard",
-    "Healer",
-    "Dragon",
-    "P.E.K.K.A.",
-    "Baby Dragon",
-    "Miner",
-    "Electro Dragon",
-    "Yeti",
-    "Dragon Rider",
-    "Electro Titan",
-    "Root Rider",
-    "Thrower",
-    "Meteor Golem"
-]
-
-dark_elixir = [
-    "Minion",
-    "Hog Rider",
-    "Valkyrie",
-    "Golem",
-    "Witch",
-    "Lava Hound",
-    "Bowler",
-    "Ice Golem",
-    "Head Hunter",
-    "Apprentice Warden",
-    "Druid",
-    "Furnace",
-    "Ruin Witch"
-]
-
-builder_base = [
-    "Raged Barbarian",
-    "Sneaky Archer",
-    "Boxer Giant",
-    "Beta Minion",
-    "Bomber",
-    "Raged Baby Dragon",
-    "Cannon Cart",
-    "Night Witch",
-    "Drop Ship",
-    "Power P.E.K.K.A.",
-    "Hog Glider"
-]
-
-super_troop = [
-    "Super Barbarian",
-    "Super Archer",
-    "Super Giant",
-    "Sneaky Goblin",
-    "Super Wall Breaker",
-    "Rocket Balloon",
-    "Super Wizard",
-    "Super Dragon",
-    "Inferno Dragon",
-    "Super Miner",
-    "Super Yeti",
-    "Super Minion",
-    "Super Hog Rider",
-    "Super Valkyrie",
-    "Super Witch",
-    "Ice Hound",
-    "Super Bowler"
-]
-
-clans = [
-    {"name": "Dutch Legion 3", "tag": "28UYR0CVU"},
-    {"name": "Dutch Legion CW", "tag": "29RPVGYU8"},
-    {"name": "Dutch Legion 4", "tag": "2J0C28R2J"},
-    {"name": "DL Gold", "tag": "2RV80YRPY"},
-    {"name": "DL Azure", "tag": "2JJ22CPUV"},
-    {"name": "DL Silver", "tag": "2RPQRYRUY"},
-    {"name": "DL Mini", "tag": "2JY9C0L0P"},
-    {"name": "DL Ruby", "tag": "2RCQPJGQY"},
-    {"name": "DL eSports", "tag": "2R0GUP2Q8"},
-    {"name": "DL eSports X", "tag": "2CYCCVQLL"},
-]
 
 # Views
 
@@ -183,7 +98,7 @@ class TradeView(discord.ui.View):
 
         self.clan_select = discord.ui.Select(
             placeholder="Kies de clan waar je de kaarten wilt ruilen",
-            options=[discord.SelectOption(label=clan["name"], value=clan["tag"]) for clan in clans],
+            options=[discord.SelectOption(label=clan["name"], value=clan["tag"]) for clan in CLANS],
             min_values=1,
             max_values=1
         )
@@ -222,7 +137,7 @@ class TradeView(discord.ui.View):
 
     async def clan_select_callback(self, interaction: discord.Interaction):
         self.clan_tag = self.clan_select.values[0]
-        self.clan_name = next((clan["name"] for clan in clans if clan["tag"] == self.clan_tag))
+        self.clan_name = next((clan["name"] for clan in CLANS if clan["tag"] == self.clan_tag))
         await interaction.response.defer()
 
     async def accept_button_callback(self, interaction: discord.Interaction):
@@ -255,7 +170,7 @@ async def build_trade(interaction: discord.Interaction, color, cards):
             "Kaarten op overschot en dringend op zoek naar die laatste kaarten om je set te voltooien? Kijk snel hieronder!\n\n"
             "• Kies de kaarten die je wilt weggeven\n"
             "• Kies de kaarten die je wilt ontvangen\n"
-            "• Kies de clan waar je wilt ruilen\n"
+            "• Kies de clan waar je de kaarten wilt ruilen\n"
         ),
         color=color
     )
@@ -273,19 +188,19 @@ trade = app_commands.Group(name="trade", description="Wissel kaarten uit voor he
 
 @trade.command(name="elixir", description="Wissel elixirkaarten uit voor het Clash of Cards evenement")
 async def trade_elixir(interaction: discord.Interaction):
-    await build_trade(interaction, discord.Color.pink(), elixir)
+    await build_trade(interaction, discord.Color.pink(), ELIXIR)
 
 @trade.command(name="dark-elixir", description="Wissel duister-elixirkaarten uit voor het Clash of Cards evenement")
 async def trade_dark_elixir(interaction: discord.Interaction):
-    await build_trade(interaction, discord.Color.dark_purple(), dark_elixir)
+    await build_trade(interaction, discord.Color.dark_purple(), DARK_ELIXIR)
 
 @trade.command(name="builder-base", description="Wissel bouwersbasiskaarten uit voor het Clash of Cards evenement")
 async def trade_builder_base(interaction: discord.Interaction):
-    await build_trade(interaction, discord.Color.blue(), builder_base)
+    await build_trade(interaction, discord.Color.blue(), BUILDER_BASE)
 
 @trade.command(name="super-troop", description="Wissel supertroepkaarten uit voor het Clash of Cards evenement")
 async def trade_super_troop(interaction: discord.Interaction):
-    await build_trade(interaction, discord.Color.orange(), super_troop)
+    await build_trade(interaction, discord.Color.orange(), SUPER_TROOP)
 
 bot.tree.add_command(trade, guild=GUILD)
 
