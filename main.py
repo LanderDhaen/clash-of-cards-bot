@@ -1,35 +1,34 @@
-import discord
-from discord.ext import commands
 import logging
+import discord
 
-from commands import trade
-from config import (TOKEN, GUILD)
+from classes.trade_bot import TradeBot
 
-# Logging
+from config import TOKEN, GUILD, IS_DEVELOPMENT
 
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-
-# Intents
+# Create an instance of the bot
 
 intents = discord.Intents.default()
 intents.message_content = True
-intents
 
-# Bot
 
-bot = commands.Bot(command_prefix='/', intents=intents)
+bot = TradeBot(command_prefix="/", intents=intents)
 
 @bot.event
-async def on_ready(): 
-    print(f'Ready to roll, {bot.user.name}!')
+async def on_ready():
+    print(f"{bot.user.name} is online and ready to be used!")
 
-# Commands
+# Create an instance of the logger
 
-@bot.command()
-async def sync(ctx):
-    await bot.tree.sync(guild=GUILD)
-    await ctx.send('Synced!')
+handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
 
-bot.tree.add_command(trade, guild=GUILD)
+if IS_DEVELOPMENT:
+    handler.setLevel(logging.DEBUG)
+else:
+    handler.setLevel(logging.INFO)
 
-bot.run(TOKEN, log_handler=handler, log_level=logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
+handler.setFormatter(formatter)
+
+# Run the bot
+
+bot.run(TOKEN, log_handler=handler)
