@@ -27,12 +27,71 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 async def on_ready(): 
     print(f'Ready to roll, {bot.user.name}!')
 
+# Cards
+
+cards = [
+    "Barbarian",
+    "Archer",
+    "Giant",
+    "Goblin",
+    "Wall Breaker",
+    "Balloon",
+    "Wizard",
+    "Healer",
+    "Dragon",
+    "P.E.K.K.A.",
+    "Baby Dragon",
+    "Miner",
+    "Electro Dragon",
+    "Yeti",
+    "Dragon Rider",
+    "Electro Titan",
+    "Root Rider",
+    "Thrower",
+    "Meteor Golem"
+]
+
 # Views
 
-class TradeView(discord.ui.View):
-    @discord.ui.button(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
+class TradeEmbed(discord.ui.View):
+    embed = discord.Embed(
+        title="Kaarten ruilen voor het Clash of Cards evenement",
 
-    async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        description=(
+            "Kaarten op overschot en dringend op zoek naar die laatste kaarten om je set te voltooien? Kijk snel hieronder!\n\n"
+            "• Kies de kaart die je wilt weggeven\n"
+            "• Kies de kaart die je wilt ontvangen\n"
+            "• Kies de clan waar je de kaarten wilt ruilen\n"
+        ),
+        color=discord.Color.orange()
+    )
+    
+
+class TradeView(discord.ui.View):
+
+    def __init__(self):
+        super().__init__(timeout=300)
+        self.give = None
+        self.receive = None
+
+    @discord.ui.select(placeholder="Kies de kaart die je wilt weggeven", options=[discord.SelectOption(label=card) for card in cards], min_values=1, max_values=1)
+    async def give_select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+        self.give = select.values[0]
+        await interaction.response.defer()
+
+
+    @discord.ui.select(placeholder="Kies de kaart die je wilt ontvangen", options=[discord.SelectOption(label=card) for card in cards], min_values=1, max_values=1)
+    async def receive_select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+        self.receive = select.values[0] 
+        await interaction.response.defer()
+
+    @discord.ui.button(label="Bevestigen", style=discord.ButtonStyle.success)
+    async def accept_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.channel.send(content=f'{interaction.user.mention} wilt **{self.give}** weggeven en **{self.receive}** ontvangen.', embed=None, view=None)
+        await interaction.response.defer()
+
+    @discord.ui.button(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
+    async def cancel_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None)
 
 # Commands
