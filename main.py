@@ -19,13 +19,9 @@ async def on_ready():
 
 # Create an instance of the logger
 
-handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
-
-if IS_DEVELOPMENT:
-    handler.setLevel(logging.DEBUG)
-else:
-    handler.setLevel(logging.INFO)
-
+handler = logging.StreamHandler()
+level = logging.DEBUG if IS_DEVELOPMENT else logging.INFO
+handler.setLevel(level)
 formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
 handler.setFormatter(formatter)
 
