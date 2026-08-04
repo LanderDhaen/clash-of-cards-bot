@@ -1,5 +1,4 @@
 import discord
-from discord import app_commands
 from discord.ext import commands
 import logging
 from dotenv import load_dotenv
@@ -35,10 +34,22 @@ async def sync(ctx):
     await bot.tree.sync(guild=GUILD)
     await ctx.send('Synced!')
 
-@bot.tree.command(name="trade", description="Wissel kaarten uit met een andere speler", guild=GUILD)
-@app_commands.describe(give="De kaart die je wilt geven", receive="De kaart die je wilt ontvangen")
-async def trade(interaction: discord.Interaction , give: str, receive: str):
-    await interaction.response.send_message(f'{interaction.user.mention} wilt een {give} geven en een {receive} ontvangen.')
+
+
+@bot.tree.command(name="trade", description="Wissel kaarten uit voor het Clash of Cards evenement", guild=GUILD)
+async def trade(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="Kaarten uitwisselen",
+        description=(
+            "Kaarten op overschot en dringend op zoek naar die laatste kaarten om je set te voltooien? Kijk snel hieronder!\n\n"
+            "• Kies de kaart die je wilt weggeven\n"
+            "• Kies de kaart die je wilt ontvangen\n"
+            "• Kies de clan waar je de kaarten wilt ruilen\n"
+        ),
+        color=discord.Color.orange()
+    )
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 bot.run(TOKEN, log_handler=handler, log_level=logging.DEBUG)
