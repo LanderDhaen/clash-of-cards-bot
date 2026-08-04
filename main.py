@@ -52,16 +52,16 @@ cards = [
 ]
 
 clans = [
-    {"name": "Dutch Legion 3", "tag": "#28UYR0CVU"},
-    {"name": "Dutch Legion CW", "tag": "#29RPVGYU8"},
-    {"name": "Dutch Legion 4", "tag": "#2J0C28R2J"},
-    {"name": "DL Gold", "tag": "#2RV80YRPY"},
-    {"name": "DL Azure", "tag": "#2JJ22CPUV"},
-    {"name": "DL Silver", "tag": "#2RPQRYRUY"},
-    {"name": "DL Mini", "tag": "#2JY9C0L0P"},
-    {"name": "DL Ruby", "tag": "#2RCQPJGQY"},
-    {"name": "DL eSports", "tag": "#2R0GUP2Q8"},
-    {"name": "DL eSports X", "tag": "#2CYCCVQLL"},
+    {"name": "Dutch Legion 3", "tag": "28UYR0CVU"},
+    {"name": "Dutch Legion CW", "tag": "29RPVGYU8"},
+    {"name": "Dutch Legion 4", "tag": "2J0C28R2J"},
+    {"name": "DL Gold", "tag": "2RV80YRPY"},
+    {"name": "DL Azure", "tag": "2JJ22CPUV"},
+    {"name": "DL Silver", "tag": "2RPQRYRUY"},
+    {"name": "DL Mini", "tag": "2JY9C0L0P"},
+    {"name": "DL Ruby", "tag": "2RCQPJGQY"},
+    {"name": "DL eSports", "tag": "2R0GUP2Q8"},
+    {"name": "DL eSports X", "tag": "2CYCCVQLL"},
 ]
 
 # Views
@@ -86,7 +86,8 @@ class TradeView(discord.ui.View):
         super().__init__(timeout=300)
         self.give = None
         self.receive = None
-        self.clan = None
+        self.clan_tag = None
+        self.clan_name = None
 
     @discord.ui.select(placeholder="Kies de kaart die je wilt weggeven", options=[discord.SelectOption(label=card) for card in cards], min_values=1, max_values=1)
     async def give_select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
@@ -101,7 +102,8 @@ class TradeView(discord.ui.View):
 
     @discord.ui.select(placeholder="Kies de clan waar je de kaarten wilt ruilen", options=[discord.SelectOption(label=clan["name"], value=clan["tag"]) for clan in clans], min_values=1, max_values=1)
     async def clan_select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
-        self.clan = select.values[0] 
+        self.clan_tag = select.values[0]
+        self.clan_name = next((clan["name"] for clan in clans if clan["tag"] == self.clan_tag)) 
         await interaction.response.defer()
 
     @discord.ui.button(label="Bevestigen", style=discord.ButtonStyle.success)
@@ -110,17 +112,19 @@ class TradeView(discord.ui.View):
         await interaction.response.edit_message(content="Je ruilvoorstel is verzonden!", embed=None, view=None)
 
         embed = discord.Embed(
-            title="Kaarten ruilen voor het Clash of Cards evenement",
+            title="Clash of Cards",
             description=(
-                f"{interaction.user.mention} heeft het volgende voorstel gedaan:\n\n"
+                f"{interaction.user.mention} wil kaarten ruilen in **{self.clan_name}**:\n"
                 ),
             color=discord.Color.orange()
         )
 
-        embed.add_field(name="Kaart die wordt weggegeven", value=f'• {self.give}', inline=True)
-        embed.add_field(name="Kaart die wordt ontvangen", value=f'• {self.receive}', inline=True)
+        visit_clan_button = discord.ui.Button(label="Bekijk de ruil", style=discord.ButtonStyle.link, url=f"https://link.clashofclans.com/en?action=OpenClanProfile&tag={self.clan_tag}")
 
-        await interaction.channel.send(embed=embed)
+        embed.add_field(name="Weggeven", value=f'• {self.give}', inline=True)
+        embed.add_field(name="Ontvangen", value=f'• {self.receive}', inline=True)
+
+        await interaction.channel.send(embed=embed, view=discord.ui.View().add_item(visit_clan_button))
 
     @discord.ui.button(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
     async def cancel_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -138,12 +142,12 @@ async def sync(ctx):
 @bot.tree.command(name="trade", description="Wissel kaarten uit voor het Clash of Cards evenement", guild=GUILD)
 async def trade(interaction: discord.Interaction):
     embed = discord.Embed(
-        title="Kaarten ruilen voor het Clash of Cards evenement",
+        title="Clash of Cards",
         description=(
             "Kaarten op overschot en dringend op zoek naar die laatste kaarten om je set te voltooien? Kijk snel hieronder!\n\n"
             "• Kies de kaart die je wilt weggeven\n"
             "• Kies de kaart die je wilt ontvangen\n"
-            "• Kies de clan waar je de kaarten wilt ruilen\n"
+            "• Kies de clan waar je wilt ruilen\n"
         ),
         color=discord.Color.orange()
     )
