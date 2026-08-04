@@ -115,7 +115,40 @@ clans = [
     {"name": "DL eSports X", "tag": "2CYCCVQLL"},
 ]
 
-# Views 
+# Views
+
+class TradeResultView(discord.ui.View):
+    def __init__(self, clan_tag: str, give: list, receive: list):
+        super().__init__(timeout=None)
+
+        self.give = give
+        self.receive = receive
+
+        self.visit_clan_button = discord.ui.Button(label="Bekijk de ruil", style=discord.ButtonStyle.link, url=f"https://link.clashofclans.com/en?action=OpenClanProfile&tag={clan_tag}")
+        self.add_item(self.visit_clan_button)
+
+        self.close_button = discord.ui.Button(label="Afsluiten", style=discord.ButtonStyle.secondary, emoji="🗑️")
+        self.close_button.callback = self.close_button_callback
+        self.add_item(self.close_button)
+
+    # Callbacks
+
+    async def close_button_callback(self, interaction: discord.Interaction):
+
+        embed = discord.Embed(
+            title="Clash of Cards",
+            description=(
+                f"Dit voorstel van {interaction.user.mention} is niet langer beschikbaar:\n"
+                ),
+            color=discord.Color.default()
+        )
+
+        embed.add_field(name="Weggeven", value="\n".join(f"• {card}" for card in self.give), inline=True)
+        embed.add_field(name="Ontvangen", value="\n".join(f"• {card}" for card in self.receive), inline=True)
+
+        await interaction.response.edit_message(embed=embed, view=None, delete_after=60)
+
+
 
 class TradeView(discord.ui.View):
 
@@ -167,7 +200,7 @@ class TradeView(discord.ui.View):
 
         self.accept_button = discord.ui.Button(
             label="Bevestigen",
-            style=discord.ButtonStyle.success
+            style=discord.ButtonStyle.primary
         )
 
         self.accept_button.callback = self.accept_button_callback
@@ -177,7 +210,7 @@ class TradeView(discord.ui.View):
             label="Annuleren",
             style=discord.ButtonStyle.secondary,
             emoji="🗑️"
-        )   
+        )
 
         self.cancel_button.callback = self.cancel_button_callback
         self.add_item(self.cancel_button)
@@ -189,17 +222,17 @@ class TradeView(discord.ui.View):
         await interaction.response.defer()
 
     async def receive_select_callback(self, interaction: discord.Interaction):
-        self.receive = self.receive_select.values 
+        self.receive = self.receive_select.values
         await interaction.response.defer()
 
     async def clan_select_callback(self, interaction: discord.Interaction):
         self.clan_tag = self.clan_select.values[0]
-        self.clan_name = next((clan["name"] for clan in clans if clan["tag"] == self.clan_tag)) 
+        self.clan_name = next((clan["name"] for clan in clans if clan["tag"] == self.clan_tag))
         await interaction.response.defer()
 
     async def accept_button_callback(self, interaction: discord.Interaction):
 
-        await interaction.response.edit_message(content="Je ruilvoorstel is verzonden!", embed=None, view=None)
+        await interaction.response.edit_message(content="Je ruilvoorstel is verzonden!", embed=None, view=None, delete_after=60)
 
         embed = discord.Embed(
             title="Clash of Cards",
@@ -209,17 +242,13 @@ class TradeView(discord.ui.View):
             color=self.color
         )
 
-        visit_clan_button = discord.ui.Button(label="Bekijk de ruil", style=discord.ButtonStyle.link, url=f"https://link.clashofclans.com/en?action=OpenClanProfile&tag={self.clan_tag}")
-        view = discord.ui.View()
-        view.add_item(visit_clan_button)
-
         embed.add_field(name="Weggeven", value="\n".join(f"• {card}" for card in self.give), inline=True)
         embed.add_field(name="Ontvangen", value="\n".join(f"• {card}" for card in self.receive), inline=True)
 
-        await interaction.channel.send(embed=embed, view=view)
+        await interaction.channel.send(embed=embed, view=TradeResultView(self.clan_tag, self.give, self.receive))
 
     async def cancel_button_callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None)
+        await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None, delete_after=60)
 
 # Functions
 
