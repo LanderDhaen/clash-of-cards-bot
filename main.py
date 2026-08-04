@@ -169,7 +169,7 @@ class TradeView(discord.ui.View):
         # Selects
 
         self.give_select = discord.ui.Select(
-            placeholder="Kies de kaart die je wilt weggeven",
+            placeholder="Kies de kaarten die je wilt weggeven",
             options=[discord.SelectOption(label=card) for card in cards],
             min_values=1,
             max_values=max_values
@@ -179,7 +179,7 @@ class TradeView(discord.ui.View):
         self.add_item(self.give_select)
 
         self.receive_select = discord.ui.Select(
-            placeholder="Kies de kaart die je wilt ontvangen",
+            placeholder="Kies de kaarten die je wilt ontvangen",
             options=[discord.SelectOption(label=card) for card in cards],
             min_values=1,
             max_values=max_values
@@ -239,7 +239,7 @@ class TradeView(discord.ui.View):
         embed = discord.Embed(
             title="Clash of Cards",
             description=(
-                f"{interaction.user.mention} wil kaarten ruilen in **{self.clan_name}**:\n"
+                f"{interaction.user.mention} wilt kaarten ruilen in **{self.clan_name}**:\n"
                 ),
             color=self.color
         )
@@ -260,8 +260,8 @@ async def build_trade(interaction: discord.Interaction, color, cards):
         title="Clash of Cards",
         description=(
             "Kaarten op overschot en dringend op zoek naar die laatste kaarten om je set te voltooien? Kijk snel hieronder!\n\n"
-            "• Kies de kaart die je wilt weggeven\n"
-            "• Kies de kaart die je wilt ontvangen\n"
+            "• Kies de kaarten die je wilt weggeven\n"
+            "• Kies de kaarten die je wilt ontvangen\n"
             "• Kies de clan waar je wilt ruilen\n"
         ),
         color=color
