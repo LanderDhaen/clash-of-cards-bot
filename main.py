@@ -208,11 +208,13 @@ class TradeView(discord.ui.View):
         )
 
         visit_clan_button = discord.ui.Button(label="Bekijk de ruil", style=discord.ButtonStyle.link, url=f"https://link.clashofclans.com/en?action=OpenClanProfile&tag={self.clan_tag}")
+        view = discord.ui.View()
+        view.add_item(visit_clan_button)
 
         embed.add_field(name="Weggeven", value=f'• {self.give}', inline=True)
         embed.add_field(name="Ontvangen", value=f'• {self.receive}', inline=True)
 
-        await interaction.channel.send(embed=embed, view=discord.ui.View().add_item(visit_clan_button))
+        await interaction.channel.send(embed=embed, view=view)
 
     async def cancel_button_callback(self, interaction: discord.Interaction):
         await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None)
