@@ -29,7 +29,7 @@ async def on_ready():
 
 # Lists
 
-cards = [
+elixir = [
     "Barbarian",
     "Archer",
     "Giant",
@@ -51,6 +51,56 @@ cards = [
     "Meteor Golem"
 ]
 
+dark_elixir = [
+    "Minion",
+    "Hog Rider",
+    "Valkyrie",
+    "Golem",
+    "Witch",
+    "Lava Hound",
+    "Bowler",
+    "Ice Golem",
+    "Head Hunter",
+    "Apprentice Warden",
+    "Druid",
+    "Furnace",
+    "Ruin Witch"
+]
+
+builder_base = [
+    "Raged Barbarian",
+    "Sneaky Archer",
+    "Boxer Giant",
+    "Beta Minion",
+    "Bomber",
+    "Raged Baby Dragon",
+    "Cannon Cart",
+    "Night Witch",
+    "Drop Ship",
+    "Power P.E.K.K.A.",
+    "Hog Glider"
+]
+
+super_troop = [
+    "Super Barbarian",
+    "Super Archer",
+    "Super Giant",
+    "Sneaky Goblin",
+    "Super Wall Breaker",
+    "Rocket Balloon",
+    "Super Wizard",
+    "Super Dragon",
+    "Inferno Dragon",
+    "Super Miner",
+    "Super Yeti",
+    "Super Minion",
+    "Super Hog Rider",
+    "Super Valkyrie",
+    "Super Witch",
+    "Ice Hound",
+    "Super Bowler"
+]
+
 clans = [
     {"name": "Dutch Legion 3", "tag": "28UYR0CVU"},
     {"name": "Dutch Legion CW", "tag": "29RPVGYU8"},
@@ -64,50 +114,87 @@ clans = [
     {"name": "DL eSports X", "tag": "2CYCCVQLL"},
 ]
 
-# Views
-
-class TradeEmbed(discord.ui.View):
-    embed = discord.Embed(
-        title="Kaarten ruilen voor het Clash of Cards evenement",
-
-        description=(
-            "Kaarten op overschot en dringend op zoek naar die laatste kaarten om je set te voltooien? Kijk snel hieronder!\n\n"
-            "• Kies de kaart die je wilt weggeven\n"
-            "• Kies de kaart die je wilt ontvangen\n"
-            "• Kies de clan waar je de kaarten wilt ruilen\n"
-        ),
-        color=discord.Color.orange()
-    )
-    
+# Views 
 
 class TradeView(discord.ui.View):
 
-    def __init__(self):
+    def __init__(self, color, cards):
         super().__init__(timeout=300)
         self.give = None
         self.receive = None
         self.clan_tag = None
         self.clan_name = None
 
-    @discord.ui.select(placeholder="Kies de kaart die je wilt weggeven", options=[discord.SelectOption(label=card) for card in cards], min_values=1, max_values=1)
-    async def give_select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
-        self.give = select.values[0]
+        self.color = color
+        self.cards = cards
+
+        # Selects
+
+        self.give_select = discord.ui.Select(
+            placeholder="Kies de kaart die je wilt weggeven",
+            options=[discord.SelectOption(label=card) for card in cards],
+            min_values=1,
+            max_values=1
+        )
+
+        self.give_select.callback = self.give_select_callback
+        self.add_item(self.give_select)
+
+        self.receive_select = discord.ui.Select(
+            placeholder="Kies de kaart die je wilt ontvangen",
+            options=[discord.SelectOption(label=card) for card in cards],
+            min_values=1,
+            max_values=1
+        )
+
+        self.receive_select.callback = self.receive_select_callback
+        self.add_item(self.receive_select)
+
+        self.clan_select = discord.ui.Select(
+            placeholder="Kies de clan waar je de kaarten wilt ruilen",
+            options=[discord.SelectOption(label=clan["name"], value=clan["tag"]) for clan in clans],
+            min_values=1,
+            max_values=1
+        )
+
+        self.clan_select.callback = self.clan_select_callback
+        self.add_item(self.clan_select)
+
+        # Buttons
+
+        self.accept_button = discord.ui.Button(
+            label="Bevestigen",
+            style=discord.ButtonStyle.success
+        )
+
+        self.accept_button.callback = self.accept_button_callback
+        self.add_item(self.accept_button)
+
+        self.cancel_button = discord.ui.Button(
+            label="Annuleren",
+            style=discord.ButtonStyle.secondary,
+            emoji="🗑️"
+        )   
+
+        self.cancel_button.callback = self.cancel_button_callback
+        self.add_item(self.cancel_button)
+
+    # Callbacks
+
+    async def give_select_callback(self, interaction: discord.Interaction):
+        self.give = self.give_select.values[0]
         await interaction.response.defer()
 
-
-    @discord.ui.select(placeholder="Kies de kaart die je wilt ontvangen", options=[discord.SelectOption(label=card) for card in cards], min_values=1, max_values=1)
-    async def receive_select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
-        self.receive = select.values[0] 
+    async def receive_select_callback(self, interaction: discord.Interaction):
+        self.receive = self.receive_select.values[0] 
         await interaction.response.defer()
 
-    @discord.ui.select(placeholder="Kies de clan waar je de kaarten wilt ruilen", options=[discord.SelectOption(label=clan["name"], value=clan["tag"]) for clan in clans], min_values=1, max_values=1)
-    async def clan_select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
-        self.clan_tag = select.values[0]
+    async def clan_select_callback(self, interaction: discord.Interaction):
+        self.clan_tag = self.clan_select.values[0]
         self.clan_name = next((clan["name"] for clan in clans if clan["tag"] == self.clan_tag)) 
         await interaction.response.defer()
 
-    @discord.ui.button(label="Bevestigen", style=discord.ButtonStyle.success)
-    async def accept_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def accept_button_callback(self, interaction: discord.Interaction):
 
         await interaction.response.edit_message(content="Je ruilvoorstel is verzonden!", embed=None, view=None)
 
@@ -116,7 +203,7 @@ class TradeView(discord.ui.View):
             description=(
                 f"{interaction.user.mention} wil kaarten ruilen in **{self.clan_name}**:\n"
                 ),
-            color=discord.Color.orange()
+            color=self.color
         )
 
         visit_clan_button = discord.ui.Button(label="Bekijk de ruil", style=discord.ButtonStyle.link, url=f"https://link.clashofclans.com/en?action=OpenClanProfile&tag={self.clan_tag}")
@@ -126,9 +213,24 @@ class TradeView(discord.ui.View):
 
         await interaction.channel.send(embed=embed, view=discord.ui.View().add_item(visit_clan_button))
 
-    @discord.ui.button(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
-    async def cancel_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def cancel_button_callback(self, interaction: discord.Interaction):
         await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None)
+
+# Functions
+
+async def trade(interaction: discord.Interaction, color, cards):
+    embed = discord.Embed(
+        title="Clash of Cards",
+        description=(
+            "Kaarten op overschot en dringend op zoek naar die laatste kaarten om je set te voltooien? Kijk snel hieronder!\n\n"
+            "• Kies de kaart die je wilt weggeven\n"
+            "• Kies de kaart die je wilt ontvangen\n"
+            "• Kies de clan waar je wilt ruilen\n"
+        ),
+        color=color
+    )
+
+    await interaction.response.send_message(embed=embed, ephemeral=True, view=TradeView(color, cards))
 
 # Commands
 
@@ -139,20 +241,21 @@ async def sync(ctx):
 
 
 
-@bot.tree.command(name="trade", description="Wissel kaarten uit voor het Clash of Cards evenement", guild=GUILD)
-async def trade(interaction: discord.Interaction):
-    embed = discord.Embed(
-        title="Clash of Cards",
-        description=(
-            "Kaarten op overschot en dringend op zoek naar die laatste kaarten om je set te voltooien? Kijk snel hieronder!\n\n"
-            "• Kies de kaart die je wilt weggeven\n"
-            "• Kies de kaart die je wilt ontvangen\n"
-            "• Kies de clan waar je wilt ruilen\n"
-        ),
-        color=discord.Color.orange()
-    )
+@bot.tree.command(name="trade-elixir", description="Wissel elixirkaarten uit voor het Clash of Cards evenement", guild=GUILD)
+async def trade_elixir(interaction: discord.Interaction):
+    await trade(interaction, discord.Color.pink(), elixir)
 
-    await interaction.response.send_message(embed=embed, ephemeral=True, view=TradeView())
+@bot.tree.command(name="trade-dark-elixir", description="Wissel duister-elixirkaarten uit voor het Clash of Cards evenement", guild=GUILD)
+async def trade_dark_elixir(interaction: discord.Interaction):
+    await trade(interaction, discord.Color.dark_purple(), dark_elixir)
+
+@bot.tree.command(name="trade-builder-base", description="Wissel bouwersbasiskaarten uit voor het Clash of Cards evenement", guild=GUILD)
+async def trade_builder_base(interaction: discord.Interaction):
+    await trade(interaction, discord.Color.blue(), builder_base)
+
+@bot.tree.command(name="trade-super-troop", description="Wissel supertroepkaarten uit voor het Clash of Cards evenement", guild=GUILD)
+async def trade_super_troop(interaction: discord.Interaction):
+    await trade(interaction, discord.Color.orange(), super_troop)
 
 
 bot.run(TOKEN, log_handler=handler, log_level=logging.DEBUG)
