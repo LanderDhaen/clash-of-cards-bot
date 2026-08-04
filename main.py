@@ -27,7 +27,7 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 async def on_ready(): 
     print(f'Ready to roll, {bot.user.name}!')
 
-# Cards
+# Lists
 
 cards = [
     "Barbarian",
@@ -49,6 +49,19 @@ cards = [
     "Root Rider",
     "Thrower",
     "Meteor Golem"
+]
+
+clans = [
+    {"name": "Dutch Legion 3", "tag": "#28UYR0CVU"},
+    {"name": "Dutch Legion CW", "tag": "#29RPVGYU8"},
+    {"name": "Dutch Legion 4", "tag": "#2J0C28R2J"},
+    {"name": "DL Gold", "tag": "#2RV80YRPY"},
+    {"name": "DL Azure", "tag": "#2JJ22CPUV"},
+    {"name": "DL Silver", "tag": "#2RPQRYRUY"},
+    {"name": "DL Mini", "tag": "#2JY9C0L0P"},
+    {"name": "DL Ruby", "tag": "#2RCQPJGQY"},
+    {"name": "DL eSports", "tag": "#2R0GUP2Q8"},
+    {"name": "DL eSports X", "tag": "#2CYCCVQLL"},
 ]
 
 # Views
@@ -73,6 +86,7 @@ class TradeView(discord.ui.View):
         super().__init__(timeout=300)
         self.give = None
         self.receive = None
+        self.clan = None
 
     @discord.ui.select(placeholder="Kies de kaart die je wilt weggeven", options=[discord.SelectOption(label=card) for card in cards], min_values=1, max_values=1)
     async def give_select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
@@ -85,9 +99,14 @@ class TradeView(discord.ui.View):
         self.receive = select.values[0] 
         await interaction.response.defer()
 
+    @discord.ui.select(placeholder="Kies de clan waar je de kaarten wilt ruilen", options=[discord.SelectOption(label=clan["name"], value=clan["tag"]) for clan in clans], min_values=1, max_values=1)
+    async def clan_select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+        self.clan = select.values[0] 
+        await interaction.response.defer()
+
     @discord.ui.button(label="Bevestigen", style=discord.ButtonStyle.success)
     async def accept_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.channel.send(content=f'{interaction.user.mention} wilt **{self.give}** weggeven en **{self.receive}** ontvangen.', embed=None, view=None)
+        await interaction.channel.send(content=f'{interaction.user.mention} wilt **{self.give}** weggeven en **{self.receive}** ontvangen in **{self.clan }**.', embed=None, view=None)
         await interaction.response.defer()
 
     @discord.ui.button(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
