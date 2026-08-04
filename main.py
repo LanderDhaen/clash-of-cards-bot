@@ -10,6 +10,7 @@ import os
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD = discord.Object(id=os.getenv("GUILD_ID"))
+ROLE_ID = os.getenv("ROLE_ID")
 
 # Logging
 
@@ -19,6 +20,7 @@ handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w'
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents
 
 # Bot
 
@@ -233,7 +235,7 @@ class TradeView(discord.ui.View):
     async def accept_button_callback(self, interaction: discord.Interaction):
 
         await interaction.response.edit_message(content="Je ruilvoorstel is verzonden!", embed=None, view=None, delete_after=60)
-
+            
         embed = discord.Embed(
             title="Clash of Cards",
             description=(
@@ -245,7 +247,7 @@ class TradeView(discord.ui.View):
         embed.add_field(name="Weggeven", value="\n".join(f"• {card}" for card in self.give), inline=True)
         embed.add_field(name="Ontvangen", value="\n".join(f"• {card}" for card in self.receive), inline=True)
 
-        await interaction.channel.send(embed=embed, view=TradeResultView(self.clan_tag, self.give, self.receive))
+        await interaction.channel.send(content=f'<@&{ROLE_ID}>', embed=embed, view=TradeResultView(self.clan_tag, self.give, self.receive))
 
     async def cancel_button_callback(self, interaction: discord.Interaction):
         await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None, delete_after=60)
@@ -253,6 +255,7 @@ class TradeView(discord.ui.View):
 # Functions
 
 async def build_trade(interaction: discord.Interaction, color, cards):
+
     embed = discord.Embed(
         title="Clash of Cards",
         description=(
