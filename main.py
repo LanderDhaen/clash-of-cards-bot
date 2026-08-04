@@ -2,15 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import logging
-from dotenv import load_dotenv
-import os
 
-# Load environment variables
-
-load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD = discord.Object(id=os.getenv("GUILD_ID"))
-ROLE_ID = os.getenv("ROLE_ID")
+from config import (TOKEN, GUILD, ROLE_ID)
 
 # Logging
 
