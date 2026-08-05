@@ -1,6 +1,7 @@
 import logging
 import discord
 
+from typing import Literal
 from discord.ext import commands
 from commands.trade import trade
 from config import TOKEN, IS_DEVELOPMENT
@@ -27,7 +28,7 @@ logger.setLevel(LOG_LEVEL)
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = commands.Bot(command_prefix="dev " if IS_DEVELOPMENT else "prod ", intents=intents)
+bot = commands.Bot(command_prefix="dev!" if IS_DEVELOPMENT else "!", intents=intents)
 
 @bot.event
 async def on_ready():
@@ -38,14 +39,13 @@ async def on_ready():
 @bot.command(name="sync")
 @commands.guild_only()
 @commands.is_owner()
-async def sync(ctx: commands.Context):
-    if IS_DEVELOPMENT:
+async def sync(ctx: commands.Context, scope: Literal["global", "guild"] = "guild"):
+    if scope == "guild":
         synced  = await bot.tree.sync(guild=ctx.guild)
         await ctx.send(f"{len(synced)} command(s) synced for {ctx.guild.name}.")
-    else:
+    elif scope == "global":
         synced = await bot.tree.sync()
         await ctx.send(f"{len(synced)} command(s) synced globally.")
-   
 
 @bot.command(name="health")
 async def health(ctx: commands.Context):
