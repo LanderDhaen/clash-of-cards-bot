@@ -27,7 +27,7 @@ logger.setLevel(LOG_LEVEL)
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="dev " if IS_DEVELOPMENT else "prod ", intents=intents)
 
 @bot.event
 async def on_ready():
@@ -38,15 +38,14 @@ async def on_ready():
 @bot.command(name="sync")
 @commands.guild_only()
 @commands.is_owner()
-async def sync(ctx: commands.Context, scope: str = "guild"):
-    if scope == "guild":
-        synced = await bot.tree.sync(guild=ctx.guild)
-        await ctx.send(f"Synced {len(synced)} command(s) to {ctx.guild.name}!")
-    elif scope == "global":
-        synced = await bot.tree.sync()
-        await ctx.send(f"Released {len(synced)} command(s) globally!")
+async def sync(ctx: commands.Context):
+    if IS_DEVELOPMENT:
+        synced  = await bot.tree.sync(guild=ctx.guild)
+        await ctx.send(f"{len(synced)} command(s) synced for {ctx.guild.name}.")
     else:
-        await ctx.send("Invalid scope! Use 'guild' or 'global'.")
+        synced = await bot.tree.sync()
+        await ctx.send(f"{len(synced)} command(s) synced globally.")
+   
 
 @bot.command(name="health")
 async def health(ctx: commands.Context):
