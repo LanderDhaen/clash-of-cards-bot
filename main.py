@@ -25,14 +25,19 @@ logger.setLevel(LOG_LEVEL)
 
 # Initialize bot with intents
 
+class TradeBot(commands.Bot):
+    async def setup_hook(self):
+        self.tree.add_command(trade)
+        logger.info("%s command(s) loaded successfully.", len(self.tree.get_commands()))
+
+    async def on_ready(self):
+        logger.info("%s is online and ready to be used!", self.user.name)
+
+
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = commands.Bot(command_prefix="dev!" if IS_DEVELOPMENT else "!", intents=intents)
-
-@bot.event
-async def on_ready():
-    logger.info("%s is online and ready to be used!", bot.user.name)
+bot = TradeBot(command_prefix="dev!" if IS_DEVELOPMENT else "!", intents=intents)
 
 # Commands
 
@@ -68,8 +73,6 @@ async def health(ctx: commands.Context):
         embed.set_footer(text=requested_by_str, icon_url=ctx.author.display_avatar.url)
 
     await ctx.send(embed=embed)
-
-bot.tree.add_command(trade)
 
 # Run the bot
 
