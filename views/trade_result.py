@@ -23,7 +23,7 @@ class TradeResultView(discord.ui.View):
             description=(
                 f"Dit voorstel van {interaction.user.mention} is niet langer beschikbaar:\n"
                 ),
-            color=discord.Color.default()
+            color=discord.Color.red()
         )
 
         embed.add_field(name="Weggeven", value="\n".join(f"• {card}" for card in self.give), inline=True)
