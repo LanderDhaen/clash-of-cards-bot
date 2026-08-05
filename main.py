@@ -33,20 +33,18 @@ async def on_ready():
 
 # Commands
 
-@bot.command(name="sync", help="Sync the bot commands within the guild.")
+@bot.command(name="sync", help="Sync the bot commands")
 @commands.guild_only()
 @commands.is_owner()
-async def sync(ctx: commands.Context):
-    synced = await bot.tree.sync(guild=ctx.guild)
-    await ctx.send(f"Synced {len(synced)} command(s) to {ctx.guild.name}!")
-
-@bot.command(name="release", help="Release the commands globally.")
-@commands.guild_only()
-@commands.is_owner()
-async def release(ctx: commands.Context):
-    synced = await bot.tree.sync()
-    await ctx.send(f"Released {len(synced)} command(s) globally!")
-
+async def sync(ctx: commands.Context, scope: str = "guild"):
+    if scope == "guild":
+        synced = await bot.tree.sync(guild=ctx.guild)
+        await ctx.send(f"Synced {len(synced)} command(s) to {ctx.guild.name}!")
+    elif scope == "global":
+        synced = await bot.tree.sync()
+        await ctx.send(f"Released {len(synced)} command(s) globally!")
+    else:
+        await ctx.send("Invalid scope! Use 'guild' or 'global'.")
 
 bot.tree.add_command(trade)
 
