@@ -33,10 +33,6 @@ async def on_ready():
 
 # Commands
 
-import time
-import discord
-from discord.ext import commands
-
 @bot.command(name="sync", help="Sync the bot commands within the guild.")
 @commands.guild_only()
 @commands.is_owner()
