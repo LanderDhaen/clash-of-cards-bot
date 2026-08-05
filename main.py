@@ -9,6 +9,8 @@ LOG_LEVEL = logging.DEBUG if IS_DEVELOPMENT else logging.INFO
 LOG_FORMAT = "%(asctime)s %(levelname)-8s %(name)s %(message)s"
 LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
+START_TIME = discord.utils.utcnow()
+
 # Initialize logging
 
 handler = logging.StreamHandler()
@@ -33,7 +35,7 @@ async def on_ready():
 
 # Commands
 
-@bot.command(name="sync", help="Sync the bot commands")
+@bot.command(name="sync")
 @commands.guild_only()
 @commands.is_owner()
 async def sync(ctx: commands.Context, scope: str = "guild"):
@@ -45,6 +47,28 @@ async def sync(ctx: commands.Context, scope: str = "guild"):
         await ctx.send(f"Released {len(synced)} command(s) globally!")
     else:
         await ctx.send("Invalid scope! Use 'guild' or 'global'.")
+
+@bot.command(name="health")
+async def health(ctx: commands.Context):
+
+    embed = discord.Embed(title="Health Check", description=f"{bot.user.name} is running smoothly with the following statistics!\n\n", color=discord.Color.green())
+
+    uptime = discord.utils.utcnow() - START_TIME    
+    uptime_str = str(uptime).split('.')[0]
+    embed.add_field(name="Uptime", value=uptime_str, inline=False)
+
+    latency = round(bot.latency * 1000, 2)
+    latency_str = f"{latency} ms"  
+    embed.add_field(name="Latency", value=latency_str, inline=False)
+
+    servers = len(bot.guilds)
+    embed.add_field(name="Servers", value=servers, inline=False)
+
+    if ctx.author:
+        requested_by_str = f"Requested by {ctx.author.display_name}"
+        embed.set_footer(text=requested_by_str, icon_url=ctx.author.display_avatar.url)
+
+    await ctx.send(embed=embed)
 
 bot.tree.add_command(trade)
 
