@@ -3,7 +3,6 @@ import discord
 
 from typing import Literal
 from discord.ext import commands
-from commands.trade import trade
 from config import TOKEN, IS_DEVELOPMENT
 
 LOG_LEVEL = logging.DEBUG if IS_DEVELOPMENT else logging.INFO
@@ -23,15 +22,28 @@ logger = logging.getLogger("trade_bot.main")
 logger.addHandler(handler)
 logger.setLevel(LOG_LEVEL)
 
-# Initialize bot with intents
+# Initialize bot
 
 class TradeBot(commands.Bot):
+
     async def setup_hook(self):
-        self.tree.add_command(trade)
-        logger.info("%s command(s) loaded successfully.", len(self.tree.get_commands()))
+        await self.load_extension("commands.trade")
+        logger.info("%s command(s) loaded successfully.", self.get_command_count())
 
     async def on_ready(self):
         logger.info("%s is online and ready to be used!", self.user.name)
+
+    async def get_uptime(self):
+        return discord.utils.utcnow() - START_TIME
+
+    async def get_latency(self):
+        return round(self.latency * 1000, 2)
+
+    async def get_server_count(self):
+        return len(self.guilds)
+
+    async def get_command_count(self):
+        return len(self.tree.get_commands())
 
 
 intents = discord.Intents.default()
@@ -39,7 +51,7 @@ intents.message_content = True
 
 bot = TradeBot(command_prefix="dev!" if IS_DEVELOPMENT else "!", intents=intents)
 
-# Commands
+# Text commands
 
 @bot.command(name="sync")
 @commands.guild_only()
@@ -55,18 +67,21 @@ async def sync(ctx: commands.Context, scope: Literal["global", "guild"] = "guild
 @bot.command(name="health")
 async def health(ctx: commands.Context):
 
-    embed = discord.Embed(title="Health Check", description=f"{bot.user.name} is running smoothly with the following statistics!\n\n", color=discord.Color.green())
+    embed = discord.Embed(title=bot.user.name, description="Currently running smoothly with the following statistics: ", color=discord.Color.green())
 
-    uptime = discord.utils.utcnow() - START_TIME    
+    uptime = await bot.get_uptime()
     uptime_str = str(uptime).split('.')[0]
     embed.add_field(name="Uptime", value=uptime_str, inline=False)
 
-    latency = round(bot.latency * 1000, 2)
-    latency_str = f"{latency} ms"  
+    latency = await bot.get_latency()
+    latency_str = f"{latency} ms"
     embed.add_field(name="Latency", value=latency_str, inline=False)
 
-    servers = len(bot.guilds)
+    servers = await bot.get_server_count()
     embed.add_field(name="Servers", value=servers, inline=False)
+
+    commands = await bot.get_command_count()
+    embed.add_field(name="Commands", value=commands, inline=False)
 
     if ctx.author:
         requested_by_str = f"Requested by {ctx.author.display_name}"
