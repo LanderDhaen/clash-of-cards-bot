@@ -21,7 +21,7 @@ class TradeSetupView(discord.ui.View):
 
         self.give_select = discord.ui.Select(
             placeholder="Kies de kaarten die je wilt weggeven",
-            options=[discord.SelectOption(label=card) for card in cards],
+            options=[discord.SelectOption(label=card.name) for card in cards],
             min_values=1,
             max_values=max_values
         )
@@ -31,7 +31,7 @@ class TradeSetupView(discord.ui.View):
 
         self.receive_select = discord.ui.Select(
             placeholder="Kies de kaarten die je wilt ontvangen",
-            options=[discord.SelectOption(label=card) for card in cards],
+            options=[discord.SelectOption(label=card.name, value=card.name) for card in cards],
             min_values=1,
             max_values=max_values
         )
@@ -41,7 +41,7 @@ class TradeSetupView(discord.ui.View):
 
         self.clan_select = discord.ui.Select(
             placeholder="Kies de clan waar je de kaarten wilt ruilen",
-            options=[discord.SelectOption(label=clan["name"], value=clan["tag"]) for clan in CLANS],
+            options=[discord.SelectOption(label=clan.name, value=clan.tag) for clan in CLANS],
             min_values=1,
             max_values=1
         )
@@ -80,7 +80,7 @@ class TradeSetupView(discord.ui.View):
 
     async def clan_select_callback(self, interaction: discord.Interaction):
         self.clan_tag = self.clan_select.values[0]
-        self.clan_name = next((clan["name"] for clan in CLANS if clan["tag"] == self.clan_tag))
+        self.clan_name = next((clan.name for clan in CLANS if clan.tag == self.clan_tag))
         await interaction.response.defer()
 
     async def accept_button_callback(self, interaction: discord.Interaction):
