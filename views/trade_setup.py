@@ -1,7 +1,7 @@
 import discord
 
 from data.clans import CLANS
-from views.trade_result import TradeResultView
+from views.trade import TradeView
 
 class TradeSetupView(discord.ui.View):
 
@@ -98,7 +98,7 @@ class TradeSetupView(discord.ui.View):
         embed.add_field(name="Weggeven", value="\n".join(f"• {card}" for card in self.give), inline=True)
         embed.add_field(name="Ontvangen", value="\n".join(f"• {card}" for card in self.receive), inline=True)
 
-        await interaction.channel.send(embed=embed, view=TradeResultView(self.clan_tag, self.give, self.receive))
+        await interaction.channel.send(embed=embed, view=TradeView(self.clan_tag, self.give, self.receive))
 
     async def cancel_button_callback(self, interaction: discord.Interaction):
         await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None, delete_after=60)

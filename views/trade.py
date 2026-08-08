@@ -1,6 +1,6 @@
 import discord
 
-class TradeResultView(discord.ui.View):
+class TradeView(discord.ui.View):
     def __init__(self, clan_tag: str, give: list, receive: list):
         super().__init__(timeout=None)
 
