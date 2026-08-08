@@ -8,7 +8,7 @@ class TradeView(discord.ui.View):
         self.receive = receive
 
         self.visit_clan_button = discord.ui.Button(label="Bekijk de ruil", style=discord.ButtonStyle.link, url=f"https://link.clashofclans.com/en?action=OpenClanProfile&tag={clan_tag}")
-        self.add_item(self.visit_clan_button)
+        self.add_item(self.visit_clan_button) if clan_tag else None
 
         self.close_button = discord.ui.Button(label="Afsluiten", style=discord.ButtonStyle.secondary, emoji="🗑️")
         self.close_button.callback = self.close_button_callback

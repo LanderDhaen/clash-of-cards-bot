@@ -10,7 +10,6 @@ class TradeSetupView(discord.ui.View):
         self.give = []
         self.receive = []
         self.clan_tag = None
-        self.clan_name = None
 
         self.color = color
         self.cards = cards
@@ -80,18 +79,18 @@ class TradeSetupView(discord.ui.View):
 
     async def clan_select_callback(self, interaction: discord.Interaction):
         self.clan_tag = self.clan_select.values[0]
-        self.clan_name = next((clan.name for clan in CLANS if clan.tag == self.clan_tag))
         await interaction.response.defer()
 
     async def accept_button_callback(self, interaction: discord.Interaction):
 
         await interaction.response.edit_message(content="Je ruilvoorstel is verzonden!", embed=None, view=None, delete_after=60)
-            
+
+        clan = next((clan for clan in CLANS if clan.tag == self.clan_tag), None)
+        embed_description = f"{interaction.user.mention} wilt kaarten ruilen in **{clan.name}**:\n" if clan else f"{interaction.user.mention} wilt kaarten ruilen:\n"
+
         embed = discord.Embed(
             title="Clash of Cards",
-            description=(
-                f"{interaction.user.mention} wilt kaarten ruilen in **{self.clan_name}**:\n"
-                ),
+            description=embed_description,
             color=self.color
         )
 
