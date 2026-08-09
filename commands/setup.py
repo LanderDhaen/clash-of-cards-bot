@@ -28,9 +28,17 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
             guild.trader_role_id = role.id
             guild.save()
 
+        embed = discord.Embed(
+            title="Clash of Cards",
+            description=(
+                           f"{interaction.user.mention} heeft de volgende instellingen gewijzigd in **{interaction.guild.name}**:\n\n"
+                           f"• **Rol:** {role.mention}\n"
+                       ),
+            color=discord.Color.green()
+        )
+
         await interaction.response.send_message(
-            f"{role.mention} is ingesteld  als de trader-rol voor deze Discord-server.",
-            ephemeral=True
+            embed=embed,
         )
 
 async def setup(bot: commands.Bot):
