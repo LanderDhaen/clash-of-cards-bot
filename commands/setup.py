@@ -9,16 +9,17 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
         self.bot = bot
 
     @app_commands.command(
-        name="trader-role",
+        name="server",
         description="Stel de rol in die vermeld wordt wanneer een gebruiker een ruil plaatst"
     )
     @app_commands.default_permissions(administrator=True)
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.guild_only()
-    async def trader_role(
+    async def setup_server(
         self,
         interaction: discord.Interaction,
-        role: discord.Role
+        role: discord.Role,
+        channel: discord.TextChannel
     ):
         with db:
             guild, created = Guild.get_or_create(
@@ -26,6 +27,7 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
             )
 
             guild.trader_role_id = role.id
+            guild.trader_channel_id = channel.id
             guild.save()
 
         embed = discord.Embed(
@@ -33,6 +35,7 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
             description=(
                            f"{interaction.user.mention} heeft de volgende instellingen gewijzigd in **{interaction.guild.name}**:\n\n"
                            f"• **Rol:** {role.mention}\n"
+                           f"• **Kanaal:** {channel.mention}\n"
                        ),
             color=discord.Color.green()
         )
