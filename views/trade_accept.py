@@ -5,13 +5,15 @@ class TradeAcceptView(discord.ui.View):
         self,
         clan: str | None,
         initiator: discord.Member,
-        acceptor: discord.Member
+        acceptor: discord.Member,
+        thread: discord.Thread
     ):
         super().__init__(timeout=None)
 
         self.clan = clan
         self.initiator = initiator
         self.acceptor = acceptor
+        self.thread = thread
 
         self.finish_button = discord.ui.Button(label="Afronden",style=discord.ButtonStyle.primary)
         self.finish_button.callback = self.finish_button_callback
@@ -26,5 +28,26 @@ class TradeAcceptView(discord.ui.View):
                 )
             )
 
+    # Callbacks
+
     async def finish_button_callback(self, interaction: discord.Interaction):
-        pass
+        if interaction.user == self.initiator or interaction.user == self.acceptor:
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=(
+                    f"{interaction.user.mention} heeft de ruil tussen "
+                    f"{self.initiator.mention} en {self.acceptor.mention} afgerond!\n"
+                ),
+                color=discord.Color.green()
+            )
+
+            await interaction.response.edit_message(content="")
+            await self.thread.send(embed=embed)
+            await self.thread.edit(archived=True, locked=True)
+
+        else:
+            await interaction.response.send_message(
+                f"Alleen {self.initiator.display_name} of "
+                f"{self.acceptor.display_name} kan deze afronden.",
+                ephemeral=True
+            )

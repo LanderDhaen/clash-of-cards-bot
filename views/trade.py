@@ -55,7 +55,8 @@ class TradeView(discord.ui.View):
         message_view = TradeAcceptView(
             clan=self.clan,
             initiator=self.initiator,
-            acceptor=interaction.user
+            acceptor=interaction.user,
+            thread=thread
         )
 
         await thread.send(
