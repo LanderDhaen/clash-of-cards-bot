@@ -85,7 +85,14 @@ class TradeSetupView(discord.ui.View):
 
     async def accept_button_callback(self, interaction: discord.Interaction):
 
-        if not self.give:
+        if set(self.give) & set(self.receive):
+            await interaction.response.send_message(
+                "Je kunt geen kaarten ontvangen die je zelf al hebt gekozen om weg te geven.",
+                ephemeral=True
+            )
+
+
+        elif not self.give:
             await interaction.response.send_message(
                 "Je moet minstens één kaart kiezen die je wilt weggeven.",
                 ephemeral=True
