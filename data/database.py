@@ -16,6 +16,10 @@ class Guild(BaseModel):
 
         guild = Guild.get_or_none(Guild.guild_id == guild_id)
         return guild.trader_role_id 
+
+    def get_trader_channel_id(guild_id: int) -> int | None:
+        guild = Guild.get_or_none(Guild.guild_id == guild_id)
+        return guild.trader_channel_id
       
 def create_tables() -> None:
     with db:

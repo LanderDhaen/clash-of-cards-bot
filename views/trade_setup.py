@@ -105,12 +105,6 @@ class TradeSetupView(discord.ui.View):
             )
 
         else:
-            await interaction.response.edit_message(
-                content="Je ruilvoorstel is verzonden!",
-                embed=None,
-                view=None,
-                delete_after=60
-            )
 
             clan = next(
                 (clan for clan in CLANS if clan.tag == self.clan_tag),
@@ -118,6 +112,7 @@ class TradeSetupView(discord.ui.View):
             )
 
             role = interaction.guild.get_role(Guild.get_trader_role_id(interaction.guild.id))
+            channel = interaction.guild.get_channel(Guild.get_trader_channel_id(interaction.guild.id))
 
             embed_description = (
                 f"{interaction.user.mention} wilt kaarten ruilen in **{clan.name}**:\n"
@@ -143,8 +138,8 @@ class TradeSetupView(discord.ui.View):
                 inline=True
             )
 
-            await interaction.channel.send(
-                content=f"{role.mention if role else None}",
+            message = await channel.send(
+                content=role.mention if role else None,
                 embed=embed,
                 view=TradeView(
                     self.clan_tag,
@@ -153,6 +148,14 @@ class TradeSetupView(discord.ui.View):
                     initiator=interaction.user
                 )
             )
+
+            await interaction.response.edit_message(
+                            content=f"Je ruilvoorstel is verzonden naar {message.jump_url}.",
+                            embed=None,
+                            view=None,
+                            delete_after=60
+                        )
+
 
 
     async def cancel_button_callback(self, interaction: discord.Interaction):
