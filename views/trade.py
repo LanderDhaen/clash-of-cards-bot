@@ -96,15 +96,20 @@ class TradeView(discord.ui.View):
 
     async def close_button_callback(self, interaction: discord.Interaction):
 
-        embed = discord.Embed(
-            title="Clash of Cards",
-            description=(
-                f"Dit voorstel van {interaction.user.mention} is niet langer beschikbaar:\n"
+        if interaction.user == self.initiator:
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=(
+                    f"{interaction.user.mention} heeft het voorstel van "
+                    f"{self.initiator.mention} afgesloten!\n"
                 ),
-            color=discord.Color.red()
-        )
+                color=discord.Color.red()
+            )
 
-        embed.add_field(name="Weggeven", value="\n".join(f"• {card}" for card in self.give), inline=True)
-        embed.add_field(name="Ontvangen", value="\n".join(f"• {card}" for card in self.receive), inline=True)
+            await interaction.response.edit_message(embed=embed, view=None)
 
-        await interaction.response.edit_message(embed=embed, view=None, delete_after=60)
+        else:
+            await interaction.response.send_message(
+                f"Alleen {self.initiator.display_name} kan deze sluiten.",
+                ephemeral=True
+            )
