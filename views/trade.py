@@ -30,7 +30,14 @@ class TradeView(discord.ui.View):
         embed.add_field(name="Weggeven", value="\n".join(f"• {card}" for card in self.give), inline=True)
         embed.add_field(name="Ontvangen", value="\n".join(f"• {card}" for card in self.receive), inline=True)
 
-        await interaction.response.edit_message(embed=embed, view=None, delete_after=60)
+        await interaction.response.edit_message(embed=embed, view=None)
+
+        thread = await interaction.message.create_thread(name=f"{self.initiator.display_name} & {interaction.user.display_name}")
+
+        await thread.send(f"{self.initiator.mention} en {interaction.user.mention}, jullie kunnen hier verder communiceren over de ruil.")
+
+
+
 
     async def close_button_callback(self, interaction: discord.Interaction):
 
