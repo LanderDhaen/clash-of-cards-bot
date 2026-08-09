@@ -15,7 +15,7 @@ class TradeView(discord.ui.View):
         self.accept_button.callback = self.accept_button_callback
         self.add_item(self.accept_button)
 
-        self.close_button = discord.ui.Button(label="Afsluiten", style=discord.ButtonStyle.secondary, emoji="🗑️")
+        self.close_button = discord.ui.Button(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
         self.close_button.callback = self.close_button_callback
         self.add_item(self.close_button)
 
@@ -99,10 +99,7 @@ class TradeView(discord.ui.View):
         if interaction.user == self.initiator:
             embed = discord.Embed(
                 title="Clash of Cards",
-                description=(
-                    f"{interaction.user.mention} heeft het voorstel van "
-                    f"{self.initiator.mention} afgesloten!\n"
-                ),
+               description=(f"Deze ruil is geannuleerd door {interaction.user.mention}.\n" ),
                 color=discord.Color.red()
             )
 

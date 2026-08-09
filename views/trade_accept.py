@@ -19,9 +19,9 @@ class TradeAcceptView(discord.ui.View):
         self.finish_button.callback = self.finish_button_callback
         self.add_item(self.finish_button)
 
-        self.close_button = discord.ui.Button(label="Afsluiten", style=discord.ButtonStyle.secondary, emoji="🗑️")
-        self.close_button.callback = self.close_button_callback
-        self.add_item(self.close_button)
+        self.cancel_button = discord.ui.Button(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
+        self.cancel_button.callback = self.cancel_button_callback
+        self.add_item(self.cancel_button)
 
         if self.clan:
             self.add_item(
@@ -55,14 +55,11 @@ class TradeAcceptView(discord.ui.View):
                 ephemeral=True
             )
 
-    async def close_button_callback(self, interaction: discord.Interaction):
+    async def cancel_button_callback(self, interaction: discord.Interaction):
         if interaction.user == self.initiator or interaction.user == self.acceptor:
             embed = discord.Embed(
                 title="Clash of Cards",
-                description=(
-                    f"{interaction.user.mention} heeft de ruil tussen "
-                    f"{self.initiator.mention} en {self.acceptor.mention} afgesloten!\n"
-                ),
+                description=(f"Deze ruil is geannuleerd door {interaction.user.mention}.\n" ),
                 color=discord.Color.red()
             )
 
