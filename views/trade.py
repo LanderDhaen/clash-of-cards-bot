@@ -110,6 +110,6 @@ class TradeView(discord.ui.View):
 
         else:
             await interaction.response.send_message(
-                f"Alleen {self.initiator.display_name} kan deze sluiten.",
+                f"Alleen {self.initiator.mention} kan deze sluiten.",
                 ephemeral=True
             )
