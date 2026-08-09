@@ -10,6 +10,7 @@ class BaseModel(Model):
 class Guild(BaseModel):
     guild_id = IntegerField(primary_key=True)
     trader_role_id = IntegerField(null=True)
+    trader_channel_id = IntegerField(null=True)
 
     def get_trader_role_id(guild_id: int) -> int | None:
 
