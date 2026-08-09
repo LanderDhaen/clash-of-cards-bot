@@ -110,7 +110,7 @@ class TradeSetupView(discord.ui.View):
                 None
             )
 
-            role = interaction.guild.get_role(Guild.get(Guild.guild_id == interaction.guild.id).trader_role_id)
+            role = interaction.guild.get_role(Guild.get_trader_role_id(interaction.guild.id))
 
             embed_description = (
                 f"{interaction.user.mention} wilt kaarten ruilen in **{clan.name}**:\n"
@@ -137,7 +137,7 @@ class TradeSetupView(discord.ui.View):
             )
 
             await interaction.channel.send(
-                content=f"{role.mention if role else ''}",
+                content=f"{role.mention if role else None}",
                 embed=embed,
                 view=TradeView(
                     self.clan_tag,
