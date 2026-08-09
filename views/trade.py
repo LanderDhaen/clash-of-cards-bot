@@ -1,10 +1,12 @@
 import discord
 
+from views.trade_accept import TradeAcceptView
+
 class TradeView(discord.ui.View):
-    def __init__(self, clan_tag: str, give: list, receive: list, initiator: discord.User):
+    def __init__(self, clan: str | None, give: list[str], receive: list[str], initiator: discord.Member):
         super().__init__(timeout=None)
 
-        self.clan = clan_tag
+        self.clan = clan
         self.give = give
         self.receive = receive
         self.initiator = initiator
@@ -50,18 +52,12 @@ class TradeView(discord.ui.View):
             name=f"{self.initiator.display_name} & {interaction.user.display_name}"
         )
 
-        message_view = discord.ui.View()
+        message_view = TradeAcceptView(
+            clan=self.clan,
+            initiator=self.initiator,
+            acceptor=interaction.user
+        )
 
-        if self.clan:
-            clan_button = discord.ui.Button(
-                        label="Bekijk de ruil",
-                        style=discord.ButtonStyle.link,
-                        url=f"https://clashofclans.com/clans/{self.clan}"
-                    )
-            
-                    
-            message_view.add_item(clan_button) if self.clan else None
-        
         await thread.send(
             content=(
                 f"{self.initiator.mention} en {interaction.user.mention}"
