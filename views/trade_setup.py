@@ -112,7 +112,7 @@ class TradeSetupView(discord.ui.View):
             )
 
             role = interaction.guild.get_role(Guild.get_trader_role_id(interaction.guild.id))
-            channel = interaction.guild.get_channel(Guild.get_trader_channel_id(interaction.guild.id))
+            channel = interaction.guild.get_channel(Guild.get_trader_channel_id(interaction.guild.id)) or interaction.channel
 
             embed_description = (
                 f"{interaction.user.mention} wilt kaarten ruilen in **{clan.name}**:\n"
