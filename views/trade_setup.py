@@ -2,6 +2,7 @@ import discord
 
 from data.clans import CLANS
 from views.trade import TradeView
+from data.database import Guild
 
 class TradeSetupView(discord.ui.View):
 
@@ -109,6 +110,8 @@ class TradeSetupView(discord.ui.View):
                 None
             )
 
+            role = interaction.guild.get_role(Guild.get(Guild.guild_id == interaction.guild.id).trader_role_id)
+
             embed_description = (
                 f"{interaction.user.mention} wilt kaarten ruilen in **{clan.name}**:\n"
                 if clan
@@ -134,6 +137,7 @@ class TradeSetupView(discord.ui.View):
             )
 
             await interaction.channel.send(
+                content=f"{role.mention if role else ''}",
                 embed=embed,
                 view=TradeView(
                     self.clan_tag,
