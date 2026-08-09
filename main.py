@@ -4,6 +4,7 @@ import discord
 from typing import Literal
 from discord.ext import commands
 from config import TOKEN, IS_DEVELOPMENT
+from data.database import create_tables
 
 LOG_LEVEL = logging.DEBUG if IS_DEVELOPMENT else logging.INFO
 LOG_FORMAT = "%(asctime)s %(levelname)-8s %(name)s %(message)s"
@@ -27,8 +28,13 @@ logger.setLevel(LOG_LEVEL)
 class TradeBot(commands.Bot):
 
     async def setup_hook(self):
+
+        create_tables()
+        logger.info("Database tables created successfully.")
         await self.load_extension("commands.trade")
-        logger.info("%s command(s) loaded successfully.", self.get_command_count())
+        await self.load_extension("commands.setup")
+        count = await self.get_command_count()
+        logger.info("%s command(s) loaded successfully.", count)
 
     async def on_ready(self):
         logger.info("%s is online and ready to be used!", self.user.name)
@@ -58,6 +64,7 @@ bot = TradeBot(command_prefix="dev!" if IS_DEVELOPMENT else "!", intents=intents
 @commands.is_owner()
 async def sync(ctx: commands.Context, scope: Literal["global", "guild"] = "guild"):
     if scope == "guild":
+        bot.tree.copy_global_to(guild=ctx.guild)
         synced  = await bot.tree.sync(guild=ctx.guild)
         await ctx.send(f"{len(synced)} command(s) synced for {ctx.guild.name}.")
     elif scope == "global":

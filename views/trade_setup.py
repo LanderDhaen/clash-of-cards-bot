@@ -2,6 +2,7 @@ import discord
 
 from data.clans import CLANS
 from views.trade import TradeView
+from data.database import Guild
 
 class TradeSetupView(discord.ui.View):
 
@@ -84,7 +85,14 @@ class TradeSetupView(discord.ui.View):
 
     async def accept_button_callback(self, interaction: discord.Interaction):
 
-        if not self.give:
+        if set(self.give) & set(self.receive):
+            await interaction.response.send_message(
+                "Je kunt geen kaarten ontvangen die je zelf al hebt gekozen om weg te geven.",
+                ephemeral=True
+            )
+
+
+        elif not self.give:
             await interaction.response.send_message(
                 "Je moet minstens één kaart kiezen die je wilt weggeven.",
                 ephemeral=True
@@ -108,6 +116,8 @@ class TradeSetupView(discord.ui.View):
                 (clan for clan in CLANS if clan.tag == self.clan_tag),
                 None
             )
+
+            role = interaction.guild.get_role(Guild.get_trader_role_id(interaction.guild.id))
 
             embed_description = (
                 f"{interaction.user.mention} wilt kaarten ruilen in **{clan.name}**:\n"
@@ -134,6 +144,7 @@ class TradeSetupView(discord.ui.View):
             )
 
             await interaction.channel.send(
+                content=f"{role.mention if role else None}",
                 embed=embed,
                 view=TradeView(
                     self.clan_tag,
