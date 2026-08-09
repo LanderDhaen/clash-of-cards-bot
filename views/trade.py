@@ -52,18 +52,45 @@ class TradeView(discord.ui.View):
             name=f"{self.initiator.display_name} & {interaction.user.display_name}"
         )
 
-        message_view = TradeAcceptView(
-            clan=self.clan,
-            initiator=self.initiator,
-            acceptor=interaction.user,
-            thread=thread
+        
+        embed = discord.Embed(
+            title="Clash of Cards",
+            description=(
+                f"Deze thread is aangemaakt om de ruil tussen {self.initiator.mention} en {interaction.user.mention} verder te bespreken.\n "
+            ),
+            color=discord.Color.light_grey()
         )
 
+        embed.add_field(
+            name="Afronden",
+            value="Wanneer de kaarten uitgewisseld zijn, kan de ruil worden afgerond.",
+            inline=False
+        )
+
+        embed.add_field(
+            name="Annuleren",
+            value="Als een van de partijen niet langer geïnteresseerd is in de ruil, kan deze worden geannuleerd.",
+            inline=False
+        )
+
+        if self.clan:
+            embed.add_field(
+                name="Bekijk de ruil",
+                value="Link naar de clan waar de ruil zal plaatsvinden.",
+                inline=False
+            )
+        
         await thread.send(
             content=(
-                f"{self.initiator.mention} en {interaction.user.mention}"
+                f"{self.initiator.mention} & {interaction.user.mention}"
             ),
-            view=message_view
+            embed=embed,
+            view=TradeAcceptView(
+                clan=self.clan,
+                initiator=self.initiator,
+                acceptor=interaction.user,
+                thread=thread
+            )
         )
 
 

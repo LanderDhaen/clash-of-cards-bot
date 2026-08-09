@@ -39,10 +39,9 @@ class TradeAcceptView(discord.ui.View):
                     f"{self.initiator.mention} en {self.acceptor.mention} afgerond!\n"
                 ),
                 color=discord.Color.green()
-            )
+            )   
 
-            await interaction.response.edit_message(content="")
-            await self.thread.send(embed=embed)
+            await interaction.response.edit_message(embed=embed, view=None)
             await self.thread.edit(archived=True, locked=True)
 
         else:
