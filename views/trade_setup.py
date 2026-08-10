@@ -85,24 +85,10 @@ class TradeSetupView(discord.ui.View):
 
     async def accept_button_callback(self, interaction: discord.Interaction):
 
-        if set(self.give) & set(self.receive):
-            await interaction.response.send_message(
-                "Je kunt geen kaarten ontvangen die je zelf al hebt gekozen om weg te geven.",
-                ephemeral=True
-            )
+        validation_error = validate_trade_setup(self.give, self.receive, self.clan_tag)
 
-
-        elif not self.give:
-            await interaction.response.send_message(
-                "Je moet minstens één kaart kiezen die je wilt weggeven.",
-                ephemeral=True
-            )
-
-        elif not self.receive:
-            await interaction.response.send_message(
-                "Je moet minstens één kaart kiezen die je wilt ontvangen.",
-                ephemeral=True
-            )
+        if validation_error:
+            await interaction.response.send_message(validation_error, ephemeral=True)
 
         else:
 
@@ -160,3 +146,20 @@ class TradeSetupView(discord.ui.View):
 
     async def cancel_button_callback(self, interaction: discord.Interaction):
         await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None, delete_after=60)
+
+# Helper functions
+
+def validate_trade_setup(give, receive, clan_tag):
+    if not give:
+        return "Je moet minstens één kaart kiezen die je wilt weggeven."
+
+    if not receive:
+        return "Je moet minstens één kaart kiezen die je wilt ontvangen."
+
+    if set(give) & set(receive):
+        return "Je kunt geen kaarten ontvangen die je zelf al hebt gekozen om weg te geven."
+
+    if not clan_tag:
+        return "Je moet een clan selecteren waar je de kaarten wilt ruilen."
+
+    return None
