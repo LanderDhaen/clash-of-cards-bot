@@ -85,7 +85,7 @@ class TradeSetupView(discord.ui.View):
 
     async def accept_button_callback(self, interaction: discord.Interaction):
 
-        validation_error = validate_trade_setup(self.give, self.receive, self.clan_tag)
+        validation_error = validate_trade_setup(self.give, self.receive)
 
         if validation_error:
             return await interaction.response.send_message(validation_error, ephemeral=True)
@@ -115,7 +115,7 @@ class TradeSetupView(discord.ui.View):
 
 # Helper functions
 
-def validate_trade_setup(give: list[str], receive: list[str], clan_tag: str) -> str | None:
+def validate_trade_setup(give: list[str], receive: list[str]) -> str | None:
     if not give:
         return "Je moet minstens één kaart kiezen die je wilt weggeven."
 
@@ -124,9 +124,6 @@ def validate_trade_setup(give: list[str], receive: list[str], clan_tag: str) -> 
 
     if set(give) & set(receive):
         return "Je kunt geen kaarten ontvangen die je zelf al hebt gekozen om weg te geven."
-
-    if not clan_tag:
-        return "Je moet een clan selecteren waar je de kaarten wilt ruilen."
 
     return None
 
