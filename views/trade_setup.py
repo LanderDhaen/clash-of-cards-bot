@@ -101,7 +101,7 @@ class TradeSetupView(discord.ui.View):
             )
 
         trade_content = trader_role.mention if trader_role else None
-        trade_embed = create_trade_setup_embed(interaction.user, clan, self.give, self.receive)
+        trade_embed = create_trade_setup_embed(interaction.user, self.color, clan, self.give, self.receive)
         trade_view = TradeView(self.clan_tag, self.give, self.receive, initiator=interaction.user)
 
         trade_message = await trade_channel.send(content=trade_content, embed=trade_embed, view=trade_view)
@@ -146,7 +146,7 @@ def get_settings_by_guild(guild: discord.Guild) -> tuple[discord.Role | None, di
 
     return role, channel
 
-def create_trade_setup_embed(initiator: discord.Member, clan: Clan | None, give: list[str], receive: list[str]) -> discord.Embed:
+def create_trade_setup_embed(initiator: discord.Member, color: discord.Colour, clan: Clan | None, give: list[str], receive: list[str]) -> discord.Embed:
 
     embed = discord.Embed(
         title="Clash of Cards",
@@ -154,7 +154,8 @@ def create_trade_setup_embed(initiator: discord.Member, clan: Clan | None, give:
             f"{initiator.mention} wilt kaarten ruilen in **{clan.name}**:\n"
             if clan
             else f"{initiator.mention} wilt kaarten ruilen:\n"
-        )
+        ),
+        color=color
     )
 
     embed.add_field(
