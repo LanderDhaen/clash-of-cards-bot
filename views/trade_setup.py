@@ -149,7 +149,7 @@ class TradeSetupView(discord.ui.View):
 
 # Helper functions
 
-def validate_trade_setup(give, receive, clan_tag):
+def validate_trade_setup(give: list[str], receive: list[str], clan_tag: str) -> str | None:
     if not give:
         return "Je moet minstens één kaart kiezen die je wilt weggeven."
 
@@ -163,3 +163,4 @@ def validate_trade_setup(give, receive, clan_tag):
         return "Je moet een clan selecteren waar je de kaarten wilt ruilen."
 
     return None
+
