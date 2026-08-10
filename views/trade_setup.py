@@ -1,6 +1,6 @@
 import discord
 
-from data.clans import CLANS
+from data.clans import CLANS, Clan
 from views.trade import TradeView
 from data.database import Guild
 
@@ -92,37 +92,12 @@ class TradeSetupView(discord.ui.View):
 
         else:
 
-            clan = next(
-                (clan for clan in CLANS if clan.tag == self.clan_tag),
-                None
-            )
+            clan = get_clan_by_tag(self.clan_tag)
 
             role = interaction.guild.get_role(Guild.get_trader_role_id(interaction.guild.id))
             channel = interaction.guild.get_channel(Guild.get_trader_channel_id(interaction.guild.id)) or interaction.channel
 
-            embed_description = (
-                f"{interaction.user.mention} wilt kaarten ruilen in **{clan.name}**:\n"
-                if clan
-                else f"{interaction.user.mention} wilt kaarten ruilen:\n"
-            )
-
-            embed = discord.Embed(
-                title="Clash of Cards",
-                description=embed_description,
-                color=self.color
-            )
-
-            embed.add_field(
-                name="Weggeven",
-                value="\n".join(f"• {card}" for card in self.give),
-                inline=True
-            )
-
-            embed.add_field(
-                name="Ontvangen",
-                value="\n".join(f"• {card}" for card in self.receive),
-                inline=True
-            )
+            embed = create_trade_setup_embed(interaction.user, clan, self.give, self.receive)
 
             message = await channel.send(
                 content=role.mention if role else None,
@@ -164,3 +139,30 @@ def validate_trade_setup(give: list[str], receive: list[str], clan_tag: str) -> 
 
     return None
 
+def get_clan_by_tag(clan_tag: str) -> Clan | None:
+    return next((clan for clan in CLANS if clan.tag == clan_tag), None)
+
+def create_trade_setup_embed(initiator: discord.Member, clan: Clan | None, give: list[str], receive: list[str]) -> discord.Embed:
+
+    embed = discord.Embed(
+        title="Clash of Cards",
+        description=(
+            f"{initiator.mention} wilt kaarten ruilen in **{clan.name}**:\n"
+            if clan
+            else f"{initiator.mention} wilt kaarten ruilen:\n"
+        )
+    )
+
+    embed.add_field(
+        name="Weggeven",
+        value="\n".join(f"• {card}" for card in give),
+        inline=True
+    )
+
+    embed.add_field(
+        name="Ontvangen",
+        value="\n".join(f"• {card}" for card in receive),
+        inline=True
+    )
+
+    return embed
