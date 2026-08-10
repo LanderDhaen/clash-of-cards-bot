@@ -1,12 +1,13 @@
 import discord
 
+from data.cards import Card
 from data.clans import CLANS, Clan
 from views.trade import TradeView
 from data.database import Guild
 
 class TradeSetupView(discord.ui.View):
 
-    def __init__(self, color, cards):
+    def __init__(self, color: discord.Colour, cards: list[Card]):
         super().__init__(timeout=300)
         self.give = []
         self.receive = []
