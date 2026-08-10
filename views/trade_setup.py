@@ -92,15 +92,19 @@ class TradeSetupView(discord.ui.View):
 
 
         clan = get_clan_by_tag(self.clan_tag)
+        trader_role, trade_channel = get_settings_by_guild(interaction.guild)
 
-        role = interaction.guild.get_role(Guild.get_trader_role_id(interaction.guild.id))
-        channel = interaction.guild.get_channel(Guild.get_trader_channel_id(interaction.guild.id)) or interaction.channel
+        if not trade_channel:
+            return await interaction.response.send_message(
+                "Er is geen kanaal ingesteld voor ruilvoorstellen. Neem contact op met een beheerder.",
+                ephemeral=True
+            )
 
-        trade_content = role.mention if role else None
+        trade_content = trader_role.mention if trader_role else None
         trade_embed = create_trade_setup_embed(interaction.user, clan, self.give, self.receive)
         trade_view = TradeView(self.clan_tag, self.give, self.receive, initiator=interaction.user)
 
-        trade_message = await channel.send(content=trade_content, embed=trade_embed, view=trade_view)
+        trade_message = await trade_channel.send(content=trade_content, embed=trade_embed, view=trade_view)
 
         await interaction.response.edit_message(content=f"Je ruilvoorstel is verzonden naar {trade_message.jump_url}.", embed=None, view=None, delete_after=60)
 
@@ -128,6 +132,19 @@ def validate_trade_setup(give: list[str], receive: list[str], clan_tag: str) -> 
 
 def get_clan_by_tag(clan_tag: str) -> Clan | None:
     return next((clan for clan in CLANS if clan.tag == clan_tag), None)
+
+def get_settings_by_guild(guild: discord.Guild) -> tuple[discord.Role | None, discord.TextChannel | None]:
+
+    role_id = Guild.get_trader_role_id(guild.id)
+    channel_id = Guild.get_trader_channel_id(guild.id)
+
+    role = guild.get_role(role_id)
+    channel = guild.get_channel(channel_id)
+
+    if not isinstance(channel, discord.TextChannel):
+        channel = None
+
+    return role, channel
 
 def create_trade_setup_embed(initiator: discord.Member, clan: Clan | None, give: list[str], receive: list[str]) -> discord.Embed:
 
