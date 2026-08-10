@@ -88,34 +88,21 @@ class TradeSetupView(discord.ui.View):
         validation_error = validate_trade_setup(self.give, self.receive, self.clan_tag)
 
         if validation_error:
-            await interaction.response.send_message(validation_error, ephemeral=True)
+            return await interaction.response.send_message(validation_error, ephemeral=True)
 
-        else:
 
-            clan = get_clan_by_tag(self.clan_tag)
+        clan = get_clan_by_tag(self.clan_tag)
 
-            role = interaction.guild.get_role(Guild.get_trader_role_id(interaction.guild.id))
-            channel = interaction.guild.get_channel(Guild.get_trader_channel_id(interaction.guild.id)) or interaction.channel
+        role = interaction.guild.get_role(Guild.get_trader_role_id(interaction.guild.id))
+        channel = interaction.guild.get_channel(Guild.get_trader_channel_id(interaction.guild.id)) or interaction.channel
 
-            embed = create_trade_setup_embed(interaction.user, clan, self.give, self.receive)
+        trade_content = role.mention if role else None
+        trade_embed = create_trade_setup_embed(interaction.user, clan, self.give, self.receive)
+        trade_view = TradeView(self.clan_tag, self.give, self.receive, initiator=interaction.user)
 
-            message = await channel.send(
-                content=role.mention if role else None,
-                embed=embed,
-                view=TradeView(
-                    self.clan_tag,
-                    self.give,
-                    self.receive,
-                    initiator=interaction.user
-                )
-            )
+        trade_message = await channel.send(content=trade_content, embed=trade_embed, view=trade_view)
 
-            await interaction.response.edit_message(
-                            content=f"Je ruilvoorstel is verzonden naar {message.jump_url}.",
-                            embed=None,
-                            view=None,
-                            delete_after=60
-                        )
+        await interaction.response.edit_message(content=f"Je ruilvoorstel is verzonden naar {trade_message.jump_url}.", embed=None, view=None, delete_after=60)
 
 
 
