@@ -18,6 +18,15 @@ class Select(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
+        
+
+class CancelButton(discord.ui.Button):
+    def __init__(self, label: str, style: discord.ButtonStyle, emoji: str | None = None):
+        super().__init__(label=label, style=style, emoji=emoji)
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None, delete_after=60)
+
 class TradeSetupView(discord.ui.View):
 
     def __init__(self, color: discord.Colour, cards: list[Card]):
@@ -58,14 +67,11 @@ class TradeSetupView(discord.ui.View):
         self.accept_button.callback = self.accept_button_callback
         self.add_item(self.accept_button)
 
-        self.cancel_button = discord.ui.Button(
+        self.add_item(CancelButton(
             label="Annuleren",
             style=discord.ButtonStyle.secondary,
             emoji="🗑️"
-        )
-
-        self.cancel_button.callback = self.cancel_button_callback
-        self.add_item(self.cancel_button)
+        ))
 
 
     async def accept_button_callback(self, interaction: discord.Interaction):
@@ -96,11 +102,6 @@ class TradeSetupView(discord.ui.View):
         trade_message = await trade_channel.send(content=trade_content, embed=trade_embed, view=trade_view)
 
         await interaction.response.edit_message(content=f"Je ruilvoorstel is verzonden naar {trade_message.jump_url}.", embed=None, view=None, delete_after=60)
-
-
-
-    async def cancel_button_callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None, delete_after=60)
 
 # Helper functions
 
