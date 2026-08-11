@@ -5,49 +5,47 @@ from data.clans import CLANS, Clan
 from views.trade import TradeView
 from data.database import Guild
 
+class Select(discord.ui.Select):
+    def __init__(self, options: list[discord.SelectOption], placeholder: str, min_values: int = 1, max_values: int = 1):
+
+        super().__init__(
+            placeholder=placeholder,
+            options=options,
+            min_values=min_values,
+            max_values=max_values
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
 class TradeSetupView(discord.ui.View):
 
     def __init__(self, color: discord.Colour, cards: list[Card]):
         super().__init__(timeout=300)
-        self.give = []
-        self.receive = []
-        self.clan_tag = None
 
         self.color = color
-        self.cards = cards
-
-        max_values = len(cards)
 
         # Selects
 
-        self.give_select = discord.ui.Select(
-            placeholder="Kies de kaarten die je wilt weggeven",
+        self.give_select = Select(
             options=[discord.SelectOption(label=card.name) for card in cards],
-            min_values=1,
-            max_values=max_values
+            placeholder="Kies de kaarten die je wilt weggeven",
+            max_values=len(cards)
         )
 
-        self.give_select.callback = self.give_select_callback
-        self.add_item(self.give_select)
-
-        self.receive_select = discord.ui.Select(
+        self.receive_select = Select(
+            options=[discord.SelectOption(label=card.name) for card in cards],
             placeholder="Kies de kaarten die je wilt ontvangen",
-            options=[discord.SelectOption(label=card.name, value=card.name) for card in cards],
-            min_values=1,
-            max_values=max_values
+            max_values=len(cards)
         )
 
-        self.receive_select.callback = self.receive_select_callback
-        self.add_item(self.receive_select)
-
-        self.clan_select = discord.ui.Select(
-            placeholder="Kies de clan waar je de kaarten wilt ruilen",
+        self.clan_select = Select(
             options=[discord.SelectOption(label=clan.name, value=clan.tag) for clan in CLANS],
-            min_values=1,
-            max_values=1
+            placeholder="Kies de clan waar je de kaarten wilt ruilen"
         )
 
-        self.clan_select.callback = self.clan_select_callback
+        self.add_item(self.give_select)
+        self.add_item(self.receive_select)
         self.add_item(self.clan_select)
 
         # Buttons
@@ -69,30 +67,20 @@ class TradeSetupView(discord.ui.View):
         self.cancel_button.callback = self.cancel_button_callback
         self.add_item(self.cancel_button)
 
-    # Callbacks
-
-    async def give_select_callback(self, interaction: discord.Interaction):
-        self.give = self.give_select.values
-        await interaction.response.defer()
-
-    async def receive_select_callback(self, interaction: discord.Interaction):
-        self.receive = self.receive_select.values
-        await interaction.response.defer()
-
-    async def clan_select_callback(self, interaction: discord.Interaction):
-        self.clan_tag = self.clan_select.values[0]
-        await interaction.response.defer()
-
 
     async def accept_button_callback(self, interaction: discord.Interaction):
 
-        validation_error = validate_trade_setup(self.give, self.receive)
+        give = self.give_select.values
+        receive = self.receive_select.values
+        clan_tag = self.clan_select.values[0] if self.clan_select.values else None
+
+        validation_error = validate_trade_setup(give, receive)
 
         if validation_error:
             return await interaction.response.send_message(validation_error, ephemeral=True)
 
 
-        clan = get_clan_by_tag(self.clan_tag)
+        clan = get_clan_by_tag(clan_tag)
         trader_role, trade_channel = get_settings_by_guild(interaction.guild)
 
         if not trade_channel:
@@ -102,8 +90,8 @@ class TradeSetupView(discord.ui.View):
             )
 
         trade_content = trader_role.mention if trader_role else None
-        trade_embed = create_trade_setup_embed(interaction.user, self.color, clan, self.give, self.receive)
-        trade_view = TradeView(self.clan_tag, self.give, self.receive, initiator=interaction.user)
+        trade_embed = create_trade_setup_embed(interaction.user, self.color, clan, give, receive)
+        trade_view = TradeView(clan_tag, give, receive, initiator=interaction.user)
 
         trade_message = await trade_channel.send(content=trade_content, embed=trade_embed, view=trade_view)
 
