@@ -4,6 +4,7 @@ from data.trade import Trade
 from data.cards import Card
 from data.clans import CLANS
 from data.database import get_guild
+from views.trade import TradeView
 
 class TradeSetupView(discord.ui.View):
 
@@ -126,11 +127,14 @@ class ConfirmButton(discord.ui.Button):
             inline=True
         )
 
+        trade_message_view = TradeView(trade)
+
+        ## Send the trade message to the trader channel
 
         if not isinstance(trader_channel, discord.TextChannel):
             trader_channel = interaction.channel
 
-        trade_message = await trader_channel.send(content=trade_message_content, embed=trade_message_embed)
+        trade_message = await trader_channel.send(content=trade_message_content, embed=trade_message_embed, view=trade_message_view)
         await interaction.response.edit_message(content=f"Je ruilvoorstel is verzonden naar {trade_message.jump_url}.", embed=None, view=None)
 
 class CancelButton(discord.ui.Button):

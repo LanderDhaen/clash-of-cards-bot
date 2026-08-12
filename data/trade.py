@@ -24,3 +24,7 @@ class Trade:
             return "Je kunt geen kaarten ontvangen die je zelf al hebt gekozen om weg te geven."
 
         return None
+
+    def can_accept(self) -> bool:
+
+        return self.initiator != self.acceptor
