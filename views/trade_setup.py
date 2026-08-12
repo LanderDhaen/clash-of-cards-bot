@@ -1,162 +1,154 @@
 import discord
 
-from data.clans import CLANS
+from data.cards import Card
+from data.clans import CLANS, Clan
 from views.trade import TradeView
 from data.database import Guild
 
+class Select(discord.ui.Select):
+    def __init__(self, options: list[discord.SelectOption], placeholder: str, min_values: int = 1, max_values: int = 1):
+
+        super().__init__(
+            placeholder=placeholder,
+            options=options,
+            min_values=min_values,
+            max_values=max_values
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+class ConfirmButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(label="Bevestigen", style=discord.ButtonStyle.primary)
+
+    async def callback(self, interaction: discord.Interaction):
+
+        view = self.view
+        if not isinstance(view, TradeSetupView):
+            return await interaction.response.send_message("Er is iets misgegaan. Probeer het opnieuw.", ephemeral=True)
+
+        give = view.give_select.values
+        receive = view.receive_select.values
+        clan_tag = view.clan_select.values[0] if view.clan_select.values else None
+
+        validation_error = validate_trade_setup(give, receive)
+
+        if validation_error:
+            return await interaction.response.send_message(validation_error, ephemeral=True)
+
+        clan = get_clan_by_tag(clan_tag)
+        trader_role, trade_channel = get_settings_by_guild(interaction.guild)
+
+        if not trade_channel:
+            return await interaction.response.send_message(
+                "Er is geen kanaal ingesteld voor ruilvoorstellen. Neem contact op met een beheerder.",
+                ephemeral=True
+            )
+
+        trade_content = trader_role.mention if trader_role else None
+        trade_embed = create_trade_setup_embed(interaction.user, view.color, clan, give, receive)
+        trade_view = TradeView(clan, give, receive, initiator=interaction.user)
+
+        trade_message = await trade_channel.send(content=trade_content, embed=trade_embed, view=trade_view)
+
+        await interaction.response.edit_message(content=f"Je ruilvoorstel is verzonden naar {trade_message.jump_url}.", embed=None, view=None, delete_after=60)
+        
+
+class CancelButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None, delete_after=60)
+
 class TradeSetupView(discord.ui.View):
 
-    def __init__(self, color, cards):
+    def __init__(self, color: discord.Colour, cards: list[Card]):
         super().__init__(timeout=300)
-        self.give = []
-        self.receive = []
-        self.clan_tag = None
 
         self.color = color
-        self.cards = cards
-
-        max_values = len(cards)
 
         # Selects
 
-        self.give_select = discord.ui.Select(
-            placeholder="Kies de kaarten die je wilt weggeven",
+        self.give_select = Select(
             options=[discord.SelectOption(label=card.name) for card in cards],
-            min_values=1,
-            max_values=max_values
+            placeholder="Kies de kaarten die je wilt weggeven",
+            max_values=len(cards)
         )
 
-        self.give_select.callback = self.give_select_callback
-        self.add_item(self.give_select)
-
-        self.receive_select = discord.ui.Select(
+        self.receive_select = Select(
+            options=[discord.SelectOption(label=card.name) for card in cards],
             placeholder="Kies de kaarten die je wilt ontvangen",
-            options=[discord.SelectOption(label=card.name, value=card.name) for card in cards],
-            min_values=1,
-            max_values=max_values
+            max_values=len(cards)
         )
 
-        self.receive_select.callback = self.receive_select_callback
-        self.add_item(self.receive_select)
-
-        self.clan_select = discord.ui.Select(
-            placeholder="Kies de clan waar je de kaarten wilt ruilen",
+        self.clan_select = Select(
             options=[discord.SelectOption(label=clan.name, value=clan.tag) for clan in CLANS],
-            min_values=1,
-            max_values=1
+            placeholder="Kies de clan waar je de kaarten wilt ruilen"
         )
 
-        self.clan_select.callback = self.clan_select_callback
+        self.add_item(self.give_select)
+        self.add_item(self.receive_select)
         self.add_item(self.clan_select)
 
         # Buttons
 
-        self.accept_button = discord.ui.Button(
-            label="Bevestigen",
-            style=discord.ButtonStyle.primary
-        )
+        self.add_item(ConfirmButton())
+        self.add_item(CancelButton())
 
-        self.accept_button.callback = self.accept_button_callback
-        self.add_item(self.accept_button)
+# Helper functions
 
-        self.cancel_button = discord.ui.Button(
-            label="Annuleren",
-            style=discord.ButtonStyle.secondary,
-            emoji="🗑️"
-        )
+def validate_trade_setup(give: list[str], receive: list[str]) -> str | None:
+    if not give:
+        return "Je moet minstens één kaart kiezen die je wilt weggeven."
 
-        self.cancel_button.callback = self.cancel_button_callback
-        self.add_item(self.cancel_button)
+    if not receive:
+        return "Je moet minstens één kaart kiezen die je wilt ontvangen."
 
-    # Callbacks
+    if set(give) & set(receive):
+        return "Je kunt geen kaarten ontvangen die je zelf al hebt gekozen om weg te geven."
 
-    async def give_select_callback(self, interaction: discord.Interaction):
-        self.give = self.give_select.values
-        await interaction.response.defer()
+    return None
 
-    async def receive_select_callback(self, interaction: discord.Interaction):
-        self.receive = self.receive_select.values
-        await interaction.response.defer()
+def get_clan_by_tag(clan_tag: str) -> Clan | None:
+    return next((clan for clan in CLANS if clan.tag == clan_tag), None)
 
-    async def clan_select_callback(self, interaction: discord.Interaction):
-        self.clan_tag = self.clan_select.values[0]
-        await interaction.response.defer()
+def get_settings_by_guild(guild: discord.Guild) -> tuple[discord.Role | None, discord.TextChannel | None]:
 
+    role_id = Guild.get_trader_role_id(guild.id)
+    channel_id = Guild.get_trader_channel_id(guild.id)
 
-    async def accept_button_callback(self, interaction: discord.Interaction):
+    role = guild.get_role(role_id)
+    channel = guild.get_channel(channel_id)
 
-        if set(self.give) & set(self.receive):
-            await interaction.response.send_message(
-                "Je kunt geen kaarten ontvangen die je zelf al hebt gekozen om weg te geven.",
-                ephemeral=True
-            )
+    if not isinstance(channel, discord.TextChannel):
+        channel = None
 
+    return role, channel
 
-        elif not self.give:
-            await interaction.response.send_message(
-                "Je moet minstens één kaart kiezen die je wilt weggeven.",
-                ephemeral=True
-            )
+def create_trade_setup_embed(initiator: discord.Member, color: discord.Colour, clan: Clan | None, give: list[str], receive: list[str]) -> discord.Embed:
 
-        elif not self.receive:
-            await interaction.response.send_message(
-                "Je moet minstens één kaart kiezen die je wilt ontvangen.",
-                ephemeral=True
-            )
+    embed = discord.Embed(
+        title="Clash of Cards",
+        description=(
+            f"{initiator.mention} wilt kaarten ruilen in **{clan.name}**:\n"
+            if clan
+            else f"{initiator.mention} wilt kaarten ruilen:\n"
+        ),
+        color=color
+    )
 
-        else:
+    embed.add_field(
+        name="Weggeven",
+        value="\n".join(f"• {card}" for card in give),
+        inline=True
+    )
 
-            clan = next(
-                (clan for clan in CLANS if clan.tag == self.clan_tag),
-                None
-            )
+    embed.add_field(
+        name="Ontvangen",
+        value="\n".join(f"• {card}" for card in receive),
+        inline=True
+    )
 
-            role = interaction.guild.get_role(Guild.get_trader_role_id(interaction.guild.id))
-            channel = interaction.guild.get_channel(Guild.get_trader_channel_id(interaction.guild.id)) or interaction.channel
-
-            embed_description = (
-                f"{interaction.user.mention} wilt kaarten ruilen in **{clan.name}**:\n"
-                if clan
-                else f"{interaction.user.mention} wilt kaarten ruilen:\n"
-            )
-
-            embed = discord.Embed(
-                title="Clash of Cards",
-                description=embed_description,
-                color=self.color
-            )
-
-            embed.add_field(
-                name="Weggeven",
-                value="\n".join(f"• {card}" for card in self.give),
-                inline=True
-            )
-
-            embed.add_field(
-                name="Ontvangen",
-                value="\n".join(f"• {card}" for card in self.receive),
-                inline=True
-            )
-
-            message = await channel.send(
-                content=role.mention if role else None,
-                embed=embed,
-                view=TradeView(
-                    self.clan_tag,
-                    self.give,
-                    self.receive,
-                    initiator=interaction.user
-                )
-            )
-
-            await interaction.response.edit_message(
-                            content=f"Je ruilvoorstel is verzonden naar {message.jump_url}.",
-                            embed=None,
-                            view=None,
-                            delete_after=60
-                        )
-
-
-
-    async def cancel_button_callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None, delete_after=60)
+    return embed
