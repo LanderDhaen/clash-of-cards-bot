@@ -40,7 +40,7 @@ class AcceptButton(discord.ui.Button):
 
         trade_message_embed = interaction.message.embeds[0]
         trade_message_embed.color = trade.color
-        trade_message_embed.set_footer(text=f"Ruilvoorstel geaccepteerd door {trade.acceptor.mention}.", icon_url=trade.acceptor.display_avatar.url)
+        trade_message_embed.set_footer(text=f"Ruilvoorstel geaccepteerd door {trade.acceptor.display_name}!", icon_url=trade.acceptor.display_avatar.url)
 
         await interaction.response.edit_message(embed=trade_message_embed, view=None)
 
@@ -101,7 +101,7 @@ class CancelButton(discord.ui.Button):
 
         trade_message_embed = interaction.message.embeds[0]
         trade_message_embed.color = discord.Color.red()
-        trade_message_embed.set_footer(text=f"Ruilvoorstel geannuleerd door {interaction.user.mention}.", icon_url=interaction.user.display_avatar.url)
+        trade_message_embed.set_footer(text=f"Ruilvoorstel geannuleerd door {interaction.user.display_name}!", icon_url=interaction.user.display_avatar.url)
 
         await interaction.response.edit_message(embed=trade_message_embed, view=None, delete_after=60)
 

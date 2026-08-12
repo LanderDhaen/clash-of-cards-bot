@@ -47,7 +47,7 @@ class FinishButton(discord.ui.Button):
         trade_message_embed = trade_message.embeds[0]
 
         trade_message_embed.color = discord.Color.green()
-        trade_message_embed.set_footer(text=f"Ruil afgerond door {interaction.user.mention}.", icon_url=interaction.user.display_avatar.url)
+        trade_message_embed.set_footer(text=f"Ruil afgerond door {interaction.user.display_name}!", icon_url=interaction.user.display_avatar.url)
 
         await trade_message.edit(embed=trade_message_embed, view=None, delete_after=60)
         await thread.delete()
