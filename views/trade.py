@@ -1,7 +1,29 @@
 import discord
 
 from data.clans import Clan
-from views.trade_accept import TradeAcceptView
+
+class CancelButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
+
+    async def callback(self, interaction: discord.Interaction):
+        view = self.view
+        if not isinstance(view, TradeView):
+            return await interaction.response.send_message("Er is iets misgegaan. Probeer het opnieuw.", ephemeral=True)
+
+        if interaction.user != view.initiator:
+            return await interaction.response.send_message(
+                f"Alleen {view.initiator.mention} kan deze ruil annuleren.",
+                ephemeral=True
+            )
+
+        embed = discord.Embed(
+            title="Clash of Cards",
+            description=f"Deze ruil is geannuleerd door {interaction.user.mention}.",
+            color=discord.Color.red()
+        )
+
+        await interaction.response.edit_message(embed=embed, view=None, delete_after=60)
 
 class TradeView(discord.ui.View):
     def __init__(self, clan: Clan | None, give: list[str], receive: list[str], initiator: discord.Member):
@@ -16,9 +38,7 @@ class TradeView(discord.ui.View):
         self.accept_button.callback = self.accept_button_callback
         self.add_item(self.accept_button)
 
-        self.close_button = discord.ui.Button(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
-        self.close_button.callback = self.close_button_callback
-        self.add_item(self.close_button)
+        self.add_item(CancelButton())
 
     # Callbacks
 
@@ -93,21 +113,3 @@ class TradeView(discord.ui.View):
                 thread=thread
             )
         )
-
-
-    async def close_button_callback(self, interaction: discord.Interaction):
-
-        if interaction.user == self.initiator:
-            embed = discord.Embed(
-                title="Clash of Cards",
-               description=(f"Deze ruil is geannuleerd door {interaction.user.mention}.\n" ),
-                color=discord.Color.red()
-            )
-
-            await interaction.response.edit_message(embed=embed, view=None)
-
-        else:
-            await interaction.response.send_message(
-                f"Alleen {self.initiator.mention} kan deze sluiten.",
-                ephemeral=True
-            )

@@ -48,7 +48,7 @@ class ConfirmButton(discord.ui.Button):
 
         trade_content = trader_role.mention if trader_role else None
         trade_embed = create_trade_setup_embed(interaction.user, view.color, clan, give, receive)
-        trade_view = TradeView(clan_tag, give, receive, initiator=interaction.user)
+        trade_view = TradeView(clan, give, receive, initiator=interaction.user)
 
         trade_message = await trade_channel.send(content=trade_content, embed=trade_embed, view=trade_view)
 
