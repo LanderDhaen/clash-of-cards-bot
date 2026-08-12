@@ -25,6 +25,10 @@ class Trade:
 
         return None
 
-    def can_accept(self) -> bool:
+    def can_accept(self, user: discord.Member) -> bool:
 
-        return self.initiator != self.acceptor
+        return self.initiator != user
+
+    def is_participant(self, user: discord.Member) -> bool:
+
+        return user in [self.initiator, self.acceptor]
