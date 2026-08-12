@@ -1,5 +1,6 @@
 import discord
 
+from config import AUTO_DELETE_SECONDS
 from data.clans import Clan
 from views.trade_accept import TradeAcceptView
 
@@ -109,7 +110,7 @@ class CancelButton(discord.ui.Button):
             color=discord.Color.red()
         )
 
-        await interaction.response.edit_message(embed=embed, view=None, delete_after=60)
+        await interaction.response.edit_message(embed=embed, view=None, delete_after=AUTO_DELETE_SECONDS)
 
 class TradeView(discord.ui.View):
     def __init__(self, clan: Clan | None, give: list[str], receive: list[str], initiator: discord.Member):

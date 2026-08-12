@@ -24,13 +24,13 @@ class ConfirmButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
 
-        view = self.view
-        if not isinstance(view, TradeSetupView):
-            return await interaction.response.send_message("Er is iets misgegaan. Probeer het opnieuw.", ephemeral=True)
+        
+        assert isinstance(self.view, TradeSetupView)
 
-        give = view.give_select.values
-        receive = view.receive_select.values
-        clan_tag = view.clan_select.values[0] if view.clan_select.values else None
+        give = self.view.give_select.values
+        receive = self.view.receive_select.values
+        clan_tag = self.view.clan_select.values[0] if self.view.clan_select.values else None
+        color = self.view.color
 
         validation_error = validate_trade_setup(give, receive)
 
@@ -47,12 +47,12 @@ class ConfirmButton(discord.ui.Button):
             )
 
         trade_content = trader_role.mention if trader_role else None
-        trade_embed = create_trade_setup_embed(interaction.user, view.color, clan, give, receive)
+        trade_embed = create_trade_setup_embed(interaction.user,color, clan, give, receive)
         trade_view = TradeView(clan, give, receive, initiator=interaction.user)
 
         trade_message = await trade_channel.send(content=trade_content, embed=trade_embed, view=trade_view)
 
-        await interaction.response.edit_message(content=f"Je ruilvoorstel is verzonden naar {trade_message.jump_url}.", embed=None, view=None, delete_after=60)
+        await interaction.response.edit_message(content=f"Je ruilvoorstel is verzonden naar {trade_message.jump_url}.", embed=None, view=None)
         
 
 class CancelButton(discord.ui.Button):
@@ -60,7 +60,7 @@ class CancelButton(discord.ui.Button):
         super().__init__(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None, delete_after=60)
+        await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None)
 
 class TradeSetupView(discord.ui.View):
 
