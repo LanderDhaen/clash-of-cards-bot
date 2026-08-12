@@ -1,9 +1,10 @@
 import discord
 
+from data.clans import Clan
 from views.trade_accept import TradeAcceptView
 
 class TradeView(discord.ui.View):
-    def __init__(self, clan: str | None, give: list[str], receive: list[str], initiator: discord.Member):
+    def __init__(self, clan: Clan | None, give: list[str], receive: list[str], initiator: discord.Member):
         super().__init__(timeout=None)
 
         self.clan = clan

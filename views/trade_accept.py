@@ -1,9 +1,11 @@
 import discord
 
+from data.clans import Clan
+
 class TradeAcceptView(discord.ui.View):
     def __init__(
         self,
-        clan: str | None,
+        clan: Clan | None,
         initiator: discord.Member,
         acceptor: discord.Member,
         thread: discord.Thread
@@ -28,7 +30,7 @@ class TradeAcceptView(discord.ui.View):
                 discord.ui.Button(
                     label="Bekijk de ruil",
                     style=discord.ButtonStyle.link,
-                    url=f"https://clashofclans.com/clans/{self.clan}"
+                    url=f"https://clashofclans.com/clans/{self.clan.tag}"
                 )
             )
 
