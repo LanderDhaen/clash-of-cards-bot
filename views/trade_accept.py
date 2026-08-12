@@ -64,6 +64,8 @@ class CancelButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
 
+        from views.trade import TradeView
+
         assert isinstance(self.view, TradeAcceptView)
 
         trade = self.view.trade
@@ -71,15 +73,25 @@ class CancelButton(discord.ui.Button):
         if not trade.is_participant(interaction.user):
             return await interaction.response.send_message(f"Alleen {trade.initiator.mention} of {trade.acceptor.mention} kan deze ruil annuleren.", ephemeral=True)
 
+        ## Update the trade object
+
+        trade.acceptor = None
+
         ## Update the trade message embed & delete the thread
 
         thread = interaction.channel
         trade_message = await thread.parent.fetch_message(interaction.channel.id)
         trade_message_embed = trade_message.embeds[0]
 
-        trade_message_embed.color = discord.Color.red()
-        trade_message_embed.set_footer(text=f"Ruil geannuleerd door {interaction.user.mention}.", icon_url=interaction.user.display_avatar.url)
+        trade_message_embed.description = (
+                    f"{trade.initiator.mention} wilt kaarten ruilen in **{trade.clan.name}**:\n"
+                    if trade.clan
+                    else f"{trade.initiator.mention} wilt kaarten ruilen:\n")
+        trade_message_embed.color = trade.color
+
         trade_message_embed.set_footer(text=None, icon_url=None)
 
-        await trade_message.edit(embed=trade_message_embed, view=None, delete_after=60)
+        trade_message_view = TradeView(trade)
+
+        await trade_message.edit(embed=trade_message_embed, view=trade_message_view)
         await thread.delete()

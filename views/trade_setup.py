@@ -108,9 +108,9 @@ class ConfirmButton(discord.ui.Button):
         trade_message_embed = discord.Embed(
             title="Clash of Cards",
             description=(
-                f"{initiator.mention} wilt kaarten ruilen in **{clan.name}**:\n"
-                if clan
-                else f"{initiator.mention} wilt kaarten ruilen:\n"
+                f"{trade.initiator.mention} wilt kaarten ruilen in **{trade.clan.name}**:\n"
+                if trade.clan
+                else f"{trade.initiator.mention} wilt kaarten ruilen:\n"
             ),
             color=trade.color
         )
