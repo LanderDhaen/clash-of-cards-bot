@@ -18,11 +18,46 @@ class Select(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
+class ConfirmButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(label="Bevestigen", style=discord.ButtonStyle.primary)
+
+    async def callback(self, interaction: discord.Interaction):
+
+        view = self.view
+        if not isinstance(view, TradeSetupView):
+            return await interaction.response.send_message("Er is iets misgegaan. Probeer het opnieuw.", ephemeral=True)
+
+        give = view.give_select.values
+        receive = view.receive_select.values
+        clan_tag = view.clan_select.values[0] if view.clan_select.values else None
+
+        validation_error = validate_trade_setup(give, receive)
+
+        if validation_error:
+            return await interaction.response.send_message(validation_error, ephemeral=True)
+
+        clan = get_clan_by_tag(clan_tag)
+        trader_role, trade_channel = get_settings_by_guild(interaction.guild)
+
+        if not trade_channel:
+            return await interaction.response.send_message(
+                "Er is geen kanaal ingesteld voor ruilvoorstellen. Neem contact op met een beheerder.",
+                ephemeral=True
+            )
+
+        trade_content = trader_role.mention if trader_role else None
+        trade_embed = create_trade_setup_embed(interaction.user, view.color, clan, give, receive)
+        trade_view = TradeView(clan_tag, give, receive, initiator=interaction.user)
+
+        trade_message = await trade_channel.send(content=trade_content, embed=trade_embed, view=trade_view)
+
+        await interaction.response.edit_message(content=f"Je ruilvoorstel is verzonden naar {trade_message.jump_url}.", embed=None, view=None, delete_after=60)
         
 
 class CancelButton(discord.ui.Button):
-    def __init__(self, label: str, style: discord.ButtonStyle, emoji: str | None = None):
-        super().__init__(label=label, style=style, emoji=emoji)
+    def __init__(self):
+        super().__init__(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None, delete_after=60)
@@ -59,49 +94,8 @@ class TradeSetupView(discord.ui.View):
 
         # Buttons
 
-        self.accept_button = discord.ui.Button(
-            label="Bevestigen",
-            style=discord.ButtonStyle.primary
-        )
-
-        self.accept_button.callback = self.accept_button_callback
-        self.add_item(self.accept_button)
-
-        self.add_item(CancelButton(
-            label="Annuleren",
-            style=discord.ButtonStyle.secondary,
-            emoji="🗑️"
-        ))
-
-
-    async def accept_button_callback(self, interaction: discord.Interaction):
-
-        give = self.give_select.values
-        receive = self.receive_select.values
-        clan_tag = self.clan_select.values[0] if self.clan_select.values else None
-
-        validation_error = validate_trade_setup(give, receive)
-
-        if validation_error:
-            return await interaction.response.send_message(validation_error, ephemeral=True)
-
-
-        clan = get_clan_by_tag(clan_tag)
-        trader_role, trade_channel = get_settings_by_guild(interaction.guild)
-
-        if not trade_channel:
-            return await interaction.response.send_message(
-                "Er is geen kanaal ingesteld voor ruilvoorstellen. Neem contact op met een beheerder.",
-                ephemeral=True
-            )
-
-        trade_content = trader_role.mention if trader_role else None
-        trade_embed = create_trade_setup_embed(interaction.user, self.color, clan, give, receive)
-        trade_view = TradeView(clan_tag, give, receive, initiator=interaction.user)
-
-        trade_message = await trade_channel.send(content=trade_content, embed=trade_embed, view=trade_view)
-
-        await interaction.response.edit_message(content=f"Je ruilvoorstel is verzonden naar {trade_message.jump_url}.", embed=None, view=None, delete_after=60)
+        self.add_item(ConfirmButton())
+        self.add_item(CancelButton())
 
 # Helper functions
 
