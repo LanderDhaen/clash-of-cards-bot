@@ -20,29 +20,15 @@ class FinishButton(discord.ui.Button):
                 ephemeral=True
             )
 
-        ## Send a success message to the thread
-
-        embed = discord.Embed(
-            title="Clash of Cards",
-            description=(f"{interaction.user.mention} heeft de ruil tussen {view.initiator.mention} en {view.acceptor.mention} afgerond!\n"),
-            color=discord.Color.green()
-        )
-
-        embed.set_footer(text="Deze thread wordt nu gesloten en gearchiveerd.")
-
-        ## Close the thread and remove the buttons from the original embed
-
-        await interaction.response.edit_message(view=None)
-        await view.thread.send(embed=embed)
-        await view.thread.edit(archived=True, locked=True)
-
-        ## Edit the trade post to show that the trade has been completed and schedule the post & thread for deletion
-
         starter_message = await view.thread.parent.fetch_message(view.thread.id)
         starter_embed = starter_message.embeds[0]
-   
+
+        starter_embed.description = (f"{interaction.user.mention} heeft de ruil tussen {view.initiator.mention} en {view.acceptor.mention} afgerond!\n")
+        starter_embed.set_footer(text="Dit voorstel wordt binnen 60 seconden verwijderd.")
+
         await starter_message.edit(embed=starter_embed, view=None, delete_after=AUTO_DELETE_SECONDS)
-        await starter_message.thread.delete()
+        await view.thread.delete()
+    
 
 class CancelButton(discord.ui.Button):
     def __init__(self):
