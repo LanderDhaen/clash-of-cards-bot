@@ -1,125 +1,115 @@
 import discord
 
-from data.clans import Clan
+from data.trade import Trade
 from views.trade_accept import TradeAcceptView
 
+class TradeView(discord.ui.View):
+
+    def __init__(self, trade: Trade):
+
+        super().__init__(timeout=None)
+
+        self.trade = trade
+
+        self.add_item(AcceptButton())
+        self.add_item(CancelButton())
+
 class AcceptButton(discord.ui.Button):
+
     def __init__(self):
-        super().__init__(label="Accepteren", style=discord.ButtonStyle.primary)
+
+        super().__init__(
+            label="Accepteren",
+            style=discord.ButtonStyle.primary
+        )
 
     async def callback(self, interaction: discord.Interaction):
-        view = self.view
-        if not isinstance(view, TradeView):
-            return await interaction.response.send_message("Er is iets misgegaan. Probeer het opnieuw.", ephemeral=True)
 
-        if interaction.user == view.initiator:
-            return await interaction.response.send_message(
-                f"Je kan je eigen ruilvoorstel niet accepteren.",
-                ephemeral=True
-            )
+        assert isinstance(self.view, TradeView)
 
-        trade_embed = discord.Embed(
-            title="Clash of Cards",
-            description=(
-                f"{interaction.user.mention} heeft het voorstel van "
-                f"{view.initiator.mention} geaccepteerd!\n"
-            ),
-            color=discord.Color.green()
-        )
+        trade = self.view.trade
 
-        trade_embed.add_field(
-            name="Weggeven",
-            value="\n".join(f"• {card}" for card in view.give),
-            inline=True
-        )
+        ## Update the trade object
 
-        trade_embed.add_field(
-            name="Ontvangen",
-            value="\n".join(f"• {card}" for card in view.receive),
-            inline=True
-        )
+        if not trade.can_accept(interaction.user):
+            return await interaction.response.send_message("Je kunt je eigen ruilvoorstel niet accepteren.", ephemeral=True)
 
-        await interaction.response.edit_message(
-            embed=trade_embed,
-            view=None
-        )
+        trade.acceptor = interaction.user
+        
+        ## Update the trade message embed
+
+        trade_message_embed = interaction.message.embeds[0]
+        trade_message_embed.color = trade.color
+        trade_message_embed.set_footer(text=f"Ruilvoorstel geaccepteerd door {trade.acceptor.display_name}!", icon_url=trade.acceptor.display_avatar.url)
+
+        await interaction.response.edit_message(embed=trade_message_embed, view=None)
+
+        ## Build the thread message
 
         thread = await interaction.message.create_thread(
-            name=f"{view.initiator.display_name} & {interaction.user.display_name}"
+            name=f"{trade.initiator.display_name} & {trade.acceptor.display_name}"
         )
 
-        thread_embed = discord.Embed(
+        thread_message_content = f"{trade.initiator.mention} & {trade.acceptor.mention}"
+
+        thread_message_embed = discord.Embed(
             title="Clash of Cards",
             description=(
-                f"Deze thread is aangemaakt om de ruil tussen {view.initiator.mention} en {interaction.user.mention} verder te bespreken.\n "
+                f"Deze thread is aangemaakt om de ruil tussen {trade.initiator.mention} en {trade.acceptor.mention} verder te bespreken.\n "
             ),
-            color=discord.Color.light_grey()
+            color=trade.color
         )
 
-        thread_embed.add_field(
+        thread_message_embed.add_field(
             name="Afronden",
             value="Wanneer de kaarten uitgewisseld zijn, kan de ruil worden afgerond.",
             inline=False
         )
 
-        thread_embed.add_field(
+        thread_message_embed.add_field(
             name="Annuleren",
             value="Als een van de partijen niet langer geïnteresseerd is in de ruil, kan deze worden geannuleerd.",
             inline=False
         )
 
-        if view.clan:
-            thread_embed.add_field(
+        if trade.clan:
+            thread_message_embed.add_field(
                 name="Bekijk de ruil",
                 value="Link naar de clan waar de ruil zal plaatsvinden.",
                 inline=False
             )
 
-        await thread.send(
-            content=(
-                f"{view.initiator.mention} & {interaction.user.mention}"
-            ),
-            embed=thread_embed,
-            view=TradeAcceptView(
-                clan=view.clan,
-                initiator=view.initiator,
-                acceptor=interaction.user,
-                thread=thread
-            )
-        )
+        thread_message_view = TradeAcceptView(trade)
+
+        ## Send the thread message to the thread
+
+        await thread.send(content=thread_message_content, embed=thread_message_embed, view=thread_message_view)
 
 class CancelButton(discord.ui.Button):
+
     def __init__(self):
-        super().__init__(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
 
-    async def callback(self, interaction: discord.Interaction):
-        view = self.view
-        if not isinstance(view, TradeView):
-            return await interaction.response.send_message("Er is iets misgegaan. Probeer het opnieuw.", ephemeral=True)
-
-        if interaction.user != view.initiator:
-            return await interaction.response.send_message(
-                f"Alleen {view.initiator.mention} kan deze ruil annuleren.",
-                ephemeral=True
-            )
-
-        embed = discord.Embed(
-            title="Clash of Cards",
-            description=f"Deze ruil is geannuleerd door {interaction.user.mention}.",
-            color=discord.Color.red()
+        super().__init__(
+            label="Annuleren",
+            style=discord.ButtonStyle.secondary,
+            emoji="🗑️"
         )
 
-        await interaction.response.edit_message(embed=embed, view=None, delete_after=60)
+    async def callback(self, interaction: discord.Interaction):
 
-class TradeView(discord.ui.View):
-    def __init__(self, clan: Clan | None, give: list[str], receive: list[str], initiator: discord.Member):
-        super().__init__(timeout=None)
+        assert isinstance(self.view, TradeView)
 
-        self.clan = clan
-        self.give = give
-        self.receive = receive
-        self.initiator = initiator
+        trade_message_embed = interaction.message.embeds[0]
+        trade_message_embed.color = discord.Color.red()
+        trade_message_embed.set_footer(text=f"Ruilvoorstel geannuleerd door {interaction.user.display_name}!", icon_url=interaction.user.display_avatar.url)
 
-       
-        self.add_item(AcceptButton())
-        self.add_item(CancelButton())
+        await interaction.response.edit_message(embed=trade_message_embed, view=None, delete_after=60)
+
+
+
+      
+
+
+        
+
+

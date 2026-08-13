@@ -1,85 +1,97 @@
 import discord
 
-from data.clans import Clan
-
-class FinishButton(discord.ui.Button):
-    def __init__(self):
-        super().__init__(label="Afronden", style=discord.ButtonStyle.primary)
-
-    async def callback(self, interaction: discord.Interaction):
-        view = self.view
-        if not isinstance(view, TradeAcceptView):
-            return await interaction.response.send_message("Er is iets misgegaan. Probeer het opnieuw.", ephemeral=True)
-
-        if interaction.user != view.initiator and interaction.user != view.acceptor:
-            return await interaction.response.send_message(
-                f"Alleen {view.initiator.mention} of {view.acceptor.mention} kan deze ruil afronden.",
-                ephemeral=True
-            )
-
-        embed = discord.Embed(
-            title="Clash of Cards",
-            description=(
-                f"{interaction.user.mention} heeft de ruil tussen "
-                f"{view.initiator.mention} en {view.acceptor.mention} afgerond!\n"
-            ),
-            color=discord.Color.green()
-        )
-
-        await interaction.response.edit_message(embed=embed, view=None)
-        await view.thread.edit(archived=True, locked=True)
-
-class CancelButton(discord.ui.Button):
-    def __init__(self):
-        super().__init__(label="Annuleren", style=discord.ButtonStyle.secondary, emoji="🗑️")
-
-    async def callback(self, interaction: discord.Interaction):
-        view = self.view
-        if not isinstance(view, TradeAcceptView):
-            return await interaction.response.send_message("Er is iets misgegaan. Probeer het opnieuw.", ephemeral=True)
-
-        if interaction.user != view.initiator and interaction.user != view.acceptor:
-            return await interaction.response.send_message(
-                f"Alleen {view.initiator.mention} of {view.acceptor.mention} kan deze ruil annuleren.",
-                ephemeral=True
-            )
-
-        thread_embed = discord.Embed(
-            title="Clash of Cards",
-            description=f"Deze ruil is geannuleerd door {interaction.user.mention}.",
-            color=discord.Color.red()
-        )
-
-        await interaction.response.edit_message(embed=thread_embed, view=None, delete_after=60)
-        await view.thread.edit(archived=True, locked=True)
-
-class VisitClanButton(discord.ui.Button):
-    def __init__(self, clan: Clan):
-        super().__init__(
-            label="Bekijk de ruil",
-            style=discord.ButtonStyle.link,
-            url=f"https://clashofclans.com/clans/{clan.tag}"
-        )
+from data.trade import Trade
 
 class TradeAcceptView(discord.ui.View):
-    def __init__(
-        self,
-        clan: Clan | None,
-        initiator: discord.Member,
-        acceptor: discord.Member,
-        thread: discord.Thread
-    ):
+
+    def __init__(self, trade: Trade):
+
         super().__init__(timeout=None)
 
-        self.clan = clan
-        self.initiator = initiator
-        self.acceptor = acceptor
-        self.thread = thread
+        self.trade = trade
 
-        
-
-        self.add_item(FinishButton())    
+        self.add_item(FinishButton())
         self.add_item(CancelButton())
 
-        if self.clan:
-            self.add_item(VisitClanButton(self.clan))
+        if trade.clan:
+            self.add_item(discord.ui.Button(
+                label="Bekijk de ruil", 
+                url=f"https://link.clashofclans.com/en?action=OpenClanProfile&tag={trade.clan.tag}", 
+                style=discord.ButtonStyle.link
+                )
+            )
+
+
+class FinishButton(discord.ui.Button):
+
+    def __init__(self):
+
+        super().__init__(
+            label="Afronden",
+            style=discord.ButtonStyle.primary
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+
+        assert isinstance(self.view, TradeAcceptView)
+
+        trade = self.view.trade
+
+        if not trade.is_participant(interaction.user):
+            return await interaction.response.send_message(f"Alleen {trade.initiator.mention} of {trade.acceptor.mention} kan deze ruil afronden.", ephemeral=True)
+
+        ## Update the trade message embed & delete the thread
+
+        thread = interaction.channel
+        trade_message = await thread.parent.fetch_message(interaction.channel.id)
+        trade_message_embed = trade_message.embeds[0]
+
+        trade_message_embed.color = discord.Color.green()
+        trade_message_embed.set_footer(text=f"Ruil afgerond door {interaction.user.display_name}!", icon_url=interaction.user.display_avatar.url)
+
+        await trade_message.edit(embed=trade_message_embed, view=None, delete_after=60)
+        await thread.delete()
+
+class CancelButton(discord.ui.Button):
+
+    def __init__(self):
+
+        super().__init__(
+            label="Annuleren",
+            style=discord.ButtonStyle.secondary,
+            emoji="🗑️"
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+
+        from views.trade import TradeView
+
+        assert isinstance(self.view, TradeAcceptView)
+
+        trade = self.view.trade
+
+        if not trade.is_participant(interaction.user):
+            return await interaction.response.send_message(f"Alleen {trade.initiator.mention} of {trade.acceptor.mention} kan deze ruil annuleren.", ephemeral=True)
+
+        ## Update the trade object
+
+        trade.acceptor = None
+
+        ## Update the trade message embed & delete the thread
+
+        thread = interaction.channel
+        trade_message = await thread.parent.fetch_message(interaction.channel.id)
+        trade_message_embed = trade_message.embeds[0]
+
+        trade_message_embed.description = (
+                    f"{trade.initiator.mention} wilt kaarten ruilen in **{trade.clan.name}**:\n"
+                    if trade.clan
+                    else f"{trade.initiator.mention} wilt kaarten ruilen:\n")
+        trade_message_embed.color = trade.color
+
+        trade_message_embed.set_footer(text=None, icon_url=None)
+
+        trade_message_view = TradeView(trade)
+
+        await trade_message.edit(embed=trade_message_embed, view=trade_message_view)
+        await thread.delete()
