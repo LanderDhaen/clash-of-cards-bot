@@ -1,4 +1,5 @@
 import re
+import aiohttp
 import discord
 
 from discord.ext import commands
@@ -76,9 +77,11 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
 
         if not re.match(CLAN_TAG_REGEX, clan_tag):
             return await interaction.response.send_message(
-                f"`{clan_tag}` is not a valid clan tag. Please try again",
+                f"`{clan_tag}` is geen geldige clan tag. Probeer het opnieuw!",
                 ephemeral=True
             )
+
+        ## Check if the server is set up
 
         guild = get_guild(interaction.guild.id)
 
@@ -88,18 +91,43 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
                 ephemeral=True
             )
 
-        clans = guild.get_clans()
+        # Check if the clan exists in the Clash of Cards API
 
-        if clan_tag in clans:
+        encoded_clan_tag = clan_tag.upper().replace("#", "%23")
+        clan_name = await get_clan(encoded_clan_tag)
+
+        if clan_name is None:
             return await interaction.response.send_message(
-                f"De clan `{clan_tag}` is al toegevoegd aan deze server.",
+                f"`{clan_tag}` is geen geldige clan tag. Probeer het opnieuw!",
+                ephemeral=True
+            )
+    
+        ## Check if the clan is already added to the server
+
+        if clan_tag in guild.get_clans():
+            return await interaction.response.send_message(
+                f"{clan_name} is al toegevoegd aan deze server.",
                 ephemeral=True
             )
 
+        ## Add the clan to the server
+
         await interaction.response.send_message(
-            f"De clan `{clan_tag}` is succesvol toegevoegd aan deze server.",
+            f"{clan_name} is succesvol toegevoegd aan deze server.",
             ephemeral=True
         )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Setup(bot))
+
+async def get_clan(clan_tag: str) -> str | None:
+    url = f"https://api.clashk.ing/clan/{clan_tag}/basic"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status != 200:
+                return None
+
+            data = await response.json()
+
+            return data["name"]
