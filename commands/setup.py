@@ -1,7 +1,9 @@
+import re
 import discord
 
 from discord.ext import commands
 from discord import app_commands
+from config import CLAN_TAG_REGEX
 from data.database import Guild, get_guild, update_settings
 
 class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash of Cards Trader in"):
@@ -69,6 +71,14 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
         interaction: discord.Interaction,
         clan_tag: str
     ):
+
+        ## Validate the format
+
+        if not re.match(CLAN_TAG_REGEX, clan_tag):
+            return await interaction.response.send_message(
+                f"`{clan_tag}` is not a valid clan tag. Please try again",
+                ephemeral=True
+            )
 
         guild = get_guild(interaction.guild.id)
 
