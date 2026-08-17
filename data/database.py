@@ -20,7 +20,7 @@ class Guild(BaseModel):
 
     def remove_clan(self, clan_tag: str) -> None:
         clan = Clan.get(tag = clan_tag, guild = self)
-        clan.delete_instance
+        clan.delete_instance()
 
     def get_clans(self):
 
