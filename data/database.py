@@ -1,5 +1,5 @@
-from peewee import *
 from __future__ import annotations
+from peewee import *
 
 db = SqliteDatabase("database.db")
 
