@@ -144,7 +144,33 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
             color=discord.Color.green()
         )
 
-        await interaction.response.send_message(embed=embed)   
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(
+        name="remove-clan",
+        description="Voeg een clan toe aan de server waar gebruikers hun ruilen kunnen plaatsen"
+    )
+    @app_commands.describe(clan_tag="De tag van de clan die je wilt verwijderen")
+    @app_commands.rename(clan_tag="tag")
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.guild_only()
+    async def remove_clan(
+        self,
+        interaction: discord.Interaction,
+        clan_tag: str
+    ):
+
+        guild = get_guild(interaction.guild.id)
+
+        if not guild.has_clan(clan_tag):
+           await interaction.response.send_message(content="Deze clan is niet gelinkt aan deze server")
+
+        else:
+            guild.remove_clan(clan_tag)
+            await interaction.response.send_message(content="Deze clan is verwijderd")
+
+   
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Setup(bot))

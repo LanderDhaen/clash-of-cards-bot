@@ -12,8 +12,15 @@ class Guild(BaseModel):
     trader_role_id = IntegerField(null=True)
     trade_channel_id = IntegerField(null=True)
 
+    def has_clan(self, clan_tag: str) -> bool:
+        return Clan.select().where((Clan.guild == self) & (Clan.tag == clan_tag)).exists()
+
     def add_clan(self, clan_tag: str, clan_name: str) -> "Clan":
-        return Clan.create(tag=clan_tag, name=clan_name, guild=self)
+        return Clan.create(tag = clan_tag, name = clan_name, guild = self)
+
+    def remove_clan(self, clan_tag: str) -> None:
+        clan = Clan.get(tag = clan_tag, guild = self)
+        clan.delete_instance
 
     def get_clans(self):
 
