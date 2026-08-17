@@ -100,7 +100,7 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
 
             embed = discord.Embed(
                 title="Clash of Cards",
-                description="De server is nog niet ingesteld. Gebruik eerst `/setup server` om de server in te stellen.",
+                description=f"**{interaction.guild.name}** is nog niet ingesteld. Gebruik eerst `/setup server` om deze in te stellen.",
                 color=discord.Color.red()
             )
 
@@ -177,11 +177,11 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
 
         guild = get_guild(interaction.guild.id)
 
-        if guild is None:
+        if not guild:
 
             embed = discord.Embed(
                 title="Clash of Cards",
-                description="De server is nog niet ingesteld. Gebruik eerst `/setup server` om de server in te stellen.",
+                description=f"**{interaction.guild.name}** is nog niet ingesteld. Gebruik eerst `/setup server` om deze in te stellen.",
                 color=discord.Color.red()
             )
 
@@ -190,22 +190,41 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
         ## Check if the clan is linked to the server
 
         if not guild.has_clan(clan_tag):
-           return await interaction.response.send_message(content="Deze clan is niet gelinkt aan deze server")
+
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"Deze clan is niet gelinkt aan **{interaction.guild.name}**.",
+                color=discord.Color.red()
+            )
+           
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
         ## Remove the clan from the server
 
-        guild.remove_clan(clan_tag)
+        clan = guild.remove_clan(clan_tag)
 
         ## Send a confirmation message to the user
 
-        await interaction.response.send_message(content="Deze clan is verwijderd")
+        embed = discord.Embed(
+            title="Clash of Cards",
+            description=f"**{clan.name}** ({clan.tag}) is succesvol verwijderd van deze server.",
+            color=discord.Color.green()
+        )
+
+        await interaction.response.send_message(embed=embed)
 
     @remove_clan.autocomplete("clan_tag")
     async def remove_clan_autocomplete(self, interaction: discord.Interaction, current: str):
 
         guild = get_guild(interaction.guild.id)
 
+        if not guild:
+            return []
+
         clans = guild.get_clans()
+
+        if not clans:
+            return []
 
         return [app_commands.Choice(name=f"{clan.name} | {clan.tag}", value=clan.tag) for clan in clans]
 

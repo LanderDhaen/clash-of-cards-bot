@@ -18,9 +18,11 @@ class Guild(BaseModel):
     def add_clan(self, clan_tag: str, clan_name: str) -> "Clan":
         return Clan.create(tag = clan_tag, name = clan_name, guild = self)
 
-    def remove_clan(self, clan_tag: str) -> None:
+    def remove_clan(self, clan_tag: str) -> Clan:
         clan = Clan.get(tag = clan_tag, guild = self)
         clan.delete_instance()
+
+        return clan
 
     def get_clans(self):
         return Clan.select().where(Clan.guild == self) 
