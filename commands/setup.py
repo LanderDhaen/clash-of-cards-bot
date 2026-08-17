@@ -1,8 +1,11 @@
+import re
+import aiohttp
 import discord
 
 from discord.ext import commands
 from discord import app_commands
-from data.database import db, Guild
+from config import CLAN_TAG_REGEX
+from data.database import create_guild, get_guild
 
 class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash of Cards Trader in"):
     def __init__(self, bot: commands.Bot):
@@ -10,39 +13,238 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
 
     @app_commands.command(
         name="server",
-        description="Stel de rol in die vermeld wordt wanneer een gebruiker een ruil plaatst"
+        description="Voeg de rol en kanaal toe  aan de server waarmee de bot ruilen kan plaatsen"
     )
+    @app_commands.describe(trader_role="De rol die gepinged wordt bij het aanmaken van een ruil", trade_channel="Het kanaal waar de ruilen geplaatst worden")
+    @app_commands.rename(trader_role="trader-role", trade_channel="trade-channel")
     @app_commands.default_permissions(administrator=True)
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.guild_only()
     async def setup_server(
         self,
         interaction: discord.Interaction,
-        role: discord.Role,
-        channel: discord.TextChannel
+        trader_role: discord.Role,
+        trade_channel: discord.TextChannel
     ):
-        with db:
-            guild, created = Guild.get_or_create(
-                guild_id=interaction.guild.id
+
+        ## Update (or create) the settings in the database
+
+        guild = get_guild(interaction.guild.id)
+
+        if guild is None:
+            guild = create_guild(interaction.guild.id, trader_role.id, trade_channel.id)
+        else:
+            guild.update_settings(trader_role.id, trade_channel.id)
+
+        ## Check if the role and channel still exist in the server
+
+        updated_role = interaction.guild.get_role(guild.trader_role_id)
+        updated_channel = interaction.guild.get_channel(guild.trade_channel_id)
+
+        if updated_role is None or updated_channel is None:
+
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description="De rol of het kanaal bestaat niet meer in deze server. Gebruik `/setup server` om de instellingen opnieuw in te stellen.",
+                color=discord.Color.red()
             )
 
-            guild.trader_role_id = role.id
-            guild.trader_channel_id = channel.id
-            guild.save()
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        ## Send a confirmation message to the user
 
         embed = discord.Embed(
             title="Clash of Cards",
             description=(
-                           f"{interaction.user.mention} heeft de volgende instellingen gewijzigd in **{interaction.guild.name}**:\n\n"
-                           f"• **Rol:** {role.mention}\n"
-                           f"• **Kanaal:** {channel.mention}\n"
-                       ),
+                f"Volgende instellingen zijn gewijzigd in **{interaction.guild.name}**:\n\n"
+                f"• **Rol:** {updated_role.mention}\n"
+                f"• **Kanaal:** {updated_channel.mention}"
+            ),
             color=discord.Color.green()
         )
 
-        await interaction.response.send_message(
-            embed=embed,
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(
+        name="add-clan",
+        description="Voeg een clan toe aan de server waar gebruikers hun ruilen kunnen plaatsen"
+    )
+    @app_commands.describe(clan_tag="De tag van de clan die je wilt toevoegen")
+    @app_commands.rename(clan_tag="tag")
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.guild_only()
+    async def add_clan(
+        self,
+        interaction: discord.Interaction,
+        clan_tag: str
+    ):
+
+        ## Validate the format
+
+        if not re.match(CLAN_TAG_REGEX, clan_tag):
+
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"**{clan_tag}** is geen geldige clan tag.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        ## Check if the server is set up
+
+        guild = get_guild(interaction.guild.id)
+
+        if not guild:
+
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"**{interaction.guild.name}** is nog niet ingesteld. Gebruik eerst `/setup server` om deze in te stellen.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        # Check if the clan exists in the Clash of Cards API
+
+        encoded_clan_tag = clan_tag.upper().replace("#", "%23")
+        clan_name = await get_clan(encoded_clan_tag)
+
+        if not clan_name:
+
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"**{clan_tag}** is geen geldige clan tag.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+    
+        ## Check if the clan is already added to the server
+
+        if guild.has_clan(clan_tag):
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"**{clan_name}** ({clan_tag}) is al toegevoegd aan **{interaction.guild.name}**.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        ## Add the clan to the server
+
+        clan = guild.add_clan(clan_tag=clan_tag, clan_name=clan_name)
+
+        ## Send a confirmation message to the user
+
+        embed = discord.Embed(
+            title="Clash of Cards",
+            description=f"**{clan.name}** ({clan.tag}) is succesvol toegevoegd aan **{interaction.guild.name}**.",
+            color=discord.Color.green()
         )
+
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(
+        name="remove-clan",
+        description="Voeg een clan toe aan de server waar gebruikers hun ruilen kunnen plaatsen"
+    )
+    @app_commands.describe(clan_tag="De tag van de clan die je wilt verwijderen")
+    @app_commands.rename(clan_tag="tag")
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.guild_only()
+    async def remove_clan(
+        self,
+        interaction: discord.Interaction,
+        clan_tag: str
+    ):
+
+        ## Validate the format
+
+        if not re.match(CLAN_TAG_REGEX, clan_tag):
+
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"**{clan_tag}** is geen geldige clan tag.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        ## Check if the server is set up
+
+        guild = get_guild(interaction.guild.id)
+
+        if not guild:
+
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"**{interaction.guild.name}** is nog niet ingesteld. Gebruik eerst `/setup server` om deze in te stellen.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        ## Check if the clan is linked to the server
+
+        if not guild.has_clan(clan_tag):
+
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"Deze clan is niet gelinkt aan **{interaction.guild.name}**.",
+                color=discord.Color.red()
+            )
+           
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        ## Remove the clan from the server
+
+        clan = guild.remove_clan(clan_tag)
+
+        ## Send a confirmation message to the user
+
+        embed = discord.Embed(
+            title="Clash of Cards",
+            description=f"**{clan.name}** ({clan.tag}) is succesvol verwijderd uit **{interaction.guild.name}**.",
+            color=discord.Color.green()
+        )
+
+        await interaction.response.send_message(embed=embed)
+
+    @remove_clan.autocomplete("clan_tag")
+    async def remove_clan_autocomplete(self, interaction: discord.Interaction, current: str):
+
+        guild = get_guild(interaction.guild.id)
+
+        if not guild:
+            return []
+
+        clans = guild.get_clans()
+
+        if not clans:
+            return []
+
+        return [app_commands.Choice(name=f"{clan.name} | {clan.tag}", value=clan.tag) for clan in clans]
+
+   
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Setup(bot))
+
+async def get_clan(clan_tag: str) -> str | None:
+    url = f"https://api.clashk.ing/clan/{clan_tag}/basic"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+
+            if response.status != 200:
+                return None
+
+            data = await response.json()
+
+            if not data or "name" not in data:
+                return None
+
+            return data["name"]
