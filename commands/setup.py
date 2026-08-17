@@ -170,6 +170,15 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
             guild.remove_clan(clan_tag)
             await interaction.response.send_message(content="Deze clan is verwijderd")
 
+    @remove_clan.autocomplete("clan_tag")
+    async def remove_clan_autocomplete(self, interaction: discord.Interaction, current: str):
+
+        guild = get_guild(interaction.guild.id)
+
+        clans = guild.get_clans()
+
+        return [app_commands.Choice(name=f"{clan.name} | {clan.tag}", value=clan.tag) for clan in clans]
+
    
 
 async def setup(bot: commands.Bot):
