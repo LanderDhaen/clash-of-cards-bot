@@ -161,14 +161,44 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
         clan_tag: str
     ):
 
+        ## Validate the format
+
+        if not re.match(CLAN_TAG_REGEX, clan_tag):
+
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"**{clan_tag}** is geen geldige clan tag.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        ## Check if the server is set up
+
         guild = get_guild(interaction.guild.id)
 
-        if not guild.has_clan(clan_tag):
-           await interaction.response.send_message(content="Deze clan is niet gelinkt aan deze server")
+        if guild is None:
 
-        else:
-            guild.remove_clan(clan_tag)
-            await interaction.response.send_message(content="Deze clan is verwijderd")
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description="De server is nog niet ingesteld. Gebruik eerst `/setup server` om de server in te stellen.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        ## Check if the clan is linked to the server
+
+        if not guild.has_clan(clan_tag):
+           return await interaction.response.send_message(content="Deze clan is niet gelinkt aan deze server")
+
+        ## Remove the clan from the server
+
+        guild.remove_clan(clan_tag)
+
+        ## Send a confirmation message to the user
+
+        await interaction.response.send_message(content="Deze clan is verwijderd")
 
     @remove_clan.autocomplete("clan_tag")
     async def remove_clan_autocomplete(self, interaction: discord.Interaction, current: str):

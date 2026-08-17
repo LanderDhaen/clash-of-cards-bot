@@ -23,7 +23,6 @@ class Guild(BaseModel):
         clan.delete_instance()
 
     def get_clans(self):
-
         return Clan.select().where(Clan.guild == self) 
 
     def update_settings(self, trader_role_id: int, trade_channel_id: int) -> None:
