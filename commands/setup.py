@@ -96,7 +96,7 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
 
         guild = get_guild(interaction.guild.id)
 
-        if guild is None:
+        if not guild:
 
             embed = discord.Embed(
                 title="Clash of Cards",
@@ -111,7 +111,7 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
         encoded_clan_tag = clan_tag.upper().replace("#", "%23")
         clan_name = await get_clan(encoded_clan_tag)
 
-        if clan_name is None:
+        if not clan_name:
 
             embed = discord.Embed(
                 title="Clash of Cards",
@@ -123,10 +123,10 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
     
         ## Check if the clan is already added to the server
 
-        if clan_tag in guild.get_clans():
+        if guild.has_clan(clan_tag):
             embed = discord.Embed(
                 title="Clash of Cards",
-                description=f"**{clan_name}** ({clan_tag}) is al toegevoegd aan deze server.",
+                description=f"**{clan_name}** ({clan_tag}) is al toegevoegd aan **{interaction.guild.name}**.",
                 color=discord.Color.red()
             )
 
@@ -140,7 +140,7 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
 
         embed = discord.Embed(
             title="Clash of Cards",
-            description=f"**{clan.name}** ({clan.tag}) is succesvol toegevoegd aan deze server.",
+            description=f"**{clan.name}** ({clan.tag}) is succesvol toegevoegd aan **{interaction.guild.name}**.",
             color=discord.Color.green()
         )
 
@@ -207,7 +207,7 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
 
         embed = discord.Embed(
             title="Clash of Cards",
-            description=f"**{clan.name}** ({clan.tag}) is succesvol verwijderd van deze server.",
+            description=f"**{clan.name}** ({clan.tag}) is succesvol verwijderd uit **{interaction.guild.name}**.",
             color=discord.Color.green()
         )
 
