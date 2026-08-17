@@ -55,9 +55,6 @@ class Clan(BaseModel):
     clan_name = CharField()
     guild = ForeignKeyField(Guild, backref="clans")
 
-def add_clan_to_guild(clan_tag: str, clan_name: str, guild: Guild) -> Clan:
-    return Clan.create(clan_tag=clan_tag, clan_name=clan_name, guild=guild)
-
 def create_tables() -> None:
     with db:
         db.create_tables([Guild, Clan], safe=True)
