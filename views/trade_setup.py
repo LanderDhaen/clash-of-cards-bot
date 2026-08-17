@@ -99,7 +99,7 @@ class ConfirmButton(discord.ui.Button):
         guild = get_guild(interaction.guild.id)
 
         trader_role = interaction.guild.get_role(guild.trader_role_id)
-        trader_channel = interaction.guild.get_channel(guild.trader_channel_id)
+        trader_channel = interaction.guild.get_channel(guild.trade_channel_id)
 
         ## Build the trade message
 
