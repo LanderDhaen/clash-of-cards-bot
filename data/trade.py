@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import discord
 
-from data.clans import Clan
+from data.database import Clan
 
 @dataclass()
 class Trade:
