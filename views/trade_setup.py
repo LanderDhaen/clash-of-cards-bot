@@ -2,43 +2,46 @@ import discord
 
 from data.trade import Trade
 from data.cards import Card
-from data.clans import CLANS
-from data.database import get_guild
+from data.database import Clan, get_clan, get_guild
 from views.trade import TradeView
 
 class TradeSetupView(discord.ui.View):
 
-    def __init__(self, color: discord.Colour, cards: list[Card]):
+    def __init__(self, color: discord.Colour, cards: list[Card], clans: list[Clan]):
         super().__init__(timeout=300)
 
         self.color = color
 
-        card_options = [discord.SelectOption(label=card.name) for card in cards]
-        clan_options = [discord.SelectOption(label=clan.name, value=clan.tag) for clan in CLANS]
+        self.card_options = [discord.SelectOption(label=card.name) for card in cards]
+        self.clan_options = [discord.SelectOption(label=clan.name, value=clan.tag) for clan in clans]
 
-        max_values = len(card_options)
+        max_values = len(self.card_options)
 
         self.given_select = TradeSetupSelect(
-            options=card_options,
+            options=self.card_options,
             placeholder="Kies de kaarten die je wilt weggeven",
             max_values=max_values,
         )
 
         self.received_select = TradeSetupSelect(
-            options=card_options,
+            options=self.card_options,
             placeholder="Kies de kaarten die je wilt ontvangen",
             max_values=max_values,
         )
 
-        self.clan_select = TradeSetupSelect(
-            options=clan_options,
-            placeholder="Kies de clan waar je de kaarten wilt ruilen",
-            required=False,
-        )
-
         self.add_item(self.given_select)
         self.add_item(self.received_select)
-        self.add_item(self.clan_select)
+
+        ## Only include the clan select if there's clans linked to the server
+
+        if self.clan_options: 
+            self.clan_select = TradeSetupSelect(
+                    options=self.clan_options,
+                    placeholder="Kies de clan waar je de kaarten wilt ruilen",
+                    required=False,
+                )
+
+            self.add_item(self.clan_select)
 
         self.add_item(ConfirmButton())
         self.add_item(CancelButton())
@@ -76,8 +79,8 @@ class ConfirmButton(discord.ui.Button):
         initiator = interaction.user
         given = self.view.given_select.values
         received = self.view.received_select.values
-        clan_tag = self.view.clan_select.values[0] if self.view.clan_select.values else None
-        clan = next((clan for clan in CLANS if clan.tag == clan_tag), None)
+
+        clan = get_clan(self.view.clan_select.values[0], interaction.guild.id) if self.view.clan_options else None
 
         trade = Trade(
             initiator=initiator,

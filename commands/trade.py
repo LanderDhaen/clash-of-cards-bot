@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord import app_commands
 
 from data.cards import ELIXIR, DARK_ELIXIR, BUILDER_BASE, SUPER_TROOP
+from data.database import get_guild
 from views.trade_setup import TradeSetupView
 
 
@@ -61,6 +62,10 @@ class Trade(commands.GroupCog, group_name="trade", group_description="Wissel kaa
         color: discord.Color,
         cards: list[str]
     ):
+
+        guild = get_guild(interaction.guild.id)
+        guild_clans = guild.get_clans()
+        
         embed = discord.Embed(
             title="Clash of Cards",
             description=(
@@ -68,15 +73,17 @@ class Trade(commands.GroupCog, group_name="trade", group_description="Wissel kaa
                 "om je set te voltooien? Kijk snel hieronder!\n\n"
                 "• Kies de kaarten die je wilt weggeven\n"
                 "• Kies de kaarten die je wilt ontvangen\n"
-                "• Kies de clan waar je de kaarten wilt ruilen\n"
             ),
             color=color
         )
 
+        if guild_clans:
+            embed.description += "• Kies de clan waar je de kaarten wilt ruilen\n"
+
         await interaction.response.send_message(
             embed=embed,
             ephemeral=True,
-            view=TradeSetupView(color, cards)
+            view=TradeSetupView(color, cards, guild_clans)
         )
 
 

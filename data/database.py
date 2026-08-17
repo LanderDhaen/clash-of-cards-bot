@@ -13,13 +13,11 @@ class Guild(BaseModel):
     trade_channel_id = IntegerField(null=True)
 
     def add_clan(self, clan_tag: str, clan_name: str) -> "Clan":
-        return Clan.create(clan_tag=clan_tag, clan_name=clan_name, guild=self)
+        return Clan.create(tag=clan_tag, name=clan_name, guild=self)
 
-    def get_clans(self) -> list[str]:
+    def get_clans(self):
 
-        clans = Clan.select(Clan.clan_tag).where(Clan.guild == self) 
-
-        return [clan.clan_tag for clan in clans]
+        return Clan.select().where(Clan.guild == self) 
 
     def update_settings(self, trader_role_id: int, trade_channel_id: int) -> None:
         self.trader_role_id = trader_role_id
@@ -39,9 +37,12 @@ def create_guild(guild_id: int, trader_role_id: int, trade_channel_id: int) -> G
     )
 
 class Clan(BaseModel):
-    clan_tag = CharField(primary_key=True)
-    clan_name = CharField()
+    tag = CharField(primary_key=True)
+    name = CharField()
     guild = ForeignKeyField(Guild, backref="clans")
+
+def get_clan(clan_tag: str, guild_id: int) -> Clan | None:
+    return Clan.get_or_none((Clan.tag == clan_tag) & (Clan.guild == guild_id))
 
 def create_tables() -> None:
     with db:

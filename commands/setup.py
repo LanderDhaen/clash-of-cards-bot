@@ -140,7 +140,7 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
 
         embed = discord.Embed(
             title="Clash of Cards",
-            description=f"**{clan.clan_name}** ({clan.clan_tag}) is succesvol toegevoegd aan deze server.",
+            description=f"**{clan.name}** ({clan.tag}) is succesvol toegevoegd aan deze server.",
             color=discord.Color.green()
         )
 
