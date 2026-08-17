@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from config import CLAN_TAG_REGEX
-from data.database import get_guild, update_settings
+from data.database import create_guild, get_guild
 
 class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash of Cards Trader in"):
     def __init__(self, bot: commands.Bot):
@@ -29,16 +29,17 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
 
         ## Update (or create) the settings in the database
 
-        created, updated_guild = update_settings(
-            guild_id=interaction.guild.id,
-            trader_role_id=trader_role.id,
-            trader_channel_id=trade_channel.id
-        )
+        guild = get_guild(interaction.guild.id)
+
+        if guild is None:
+            guild = create_guild(interaction.guild.id, trader_role.id, trade_channel.id)
+        else:
+            guild.update_settings(trader_role.id, trade_channel.id)
 
         ## Check if the role and channel still exist in the server
 
-        updated_role = interaction.guild.get_role(updated_guild.trader_role_id)
-        updated_channel = interaction.guild.get_channel(updated_guild.trader_channel_id)
+        updated_role = interaction.guild.get_role(guild.trader_role_id)
+        updated_channel = interaction.guild.get_channel(guild.trade_channel_id)
 
         if updated_role is None or updated_channel is None:
 
@@ -55,7 +56,7 @@ class Setup(commands.GroupCog, group_name="setup", group_description="Stel Clash
         embed = discord.Embed(
             title="Clash of Cards",
             description=(
-                f"Volgende instellingen zijn {'aangemaakt' if created else 'gewijzigd'} in **{interaction.guild.name}**:\n\n"
+                f"Volgende instellingen zijn gewijzigd in **{interaction.guild.name}**:\n\n"
                 f"• **Rol:** {updated_role.mention}\n"
                 f"• **Kanaal:** {updated_channel.mention}"
             ),
