@@ -53,6 +53,7 @@ class TradeBot(commands.Bot):
 
 
 intents = discord.Intents.default()
+intents.members = True
 intents.message_content = True
 
 bot = TradeBot(command_prefix="dev!" if IS_DEVELOPMENT else "!", intents=intents)

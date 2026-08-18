@@ -31,6 +31,9 @@ class Guild(BaseModel):
 
         return clan
 
+    def get_clan(self, clan_tag: str) -> Clan | None:
+        return Clan.get_or_none((Clan.tag == clan_tag) & (Clan.guild == self))
+
     def get_clans(self):
         return Clan.select().where(Clan.guild == self) 
 
@@ -58,9 +61,6 @@ class Clan(BaseModel):
     name = CharField()
     guild = ForeignKeyField(Guild, backref="clans")
 
-def get_clan(clan_tag: str, guild_id: int) -> Clan | None:
-    return Clan.get_or_none((Clan.tag == clan_tag) & (Clan.guild == guild_id))
-
 ## Trade
 
 class TradeType(Enum):
@@ -82,23 +82,11 @@ class Trade(BaseModel):
     type = IntegerField(choices=TRADE_TYPES)
     given = JSONField()
     received = JSONField()
+    message_id = IntegerField(null=True)
     initiator_id = IntegerField()
     acceptor_id = IntegerField(null=True)
-    message_id = IntegerField()
     guild = ForeignKeyField(Guild, backref="trades")
     clan = ForeignKeyField(Clan, null=True)
-
-    def validate(self) -> str | None:
-        if not self.given:
-            return "Je moet minstens één kaart kiezen die je wilt weggeven."
-
-        if not self.received:
-            return "Je moet minstens één kaart kiezen die je wilt ontvangen."
-
-        if set(self.given) & set(self.received):
-            return "Je kunt geen kaarten ontvangen die je zelf al hebt gekozen om weg te geven."
-
-        return None
 
     def can_accept(self, user_id: int) -> bool:
 
@@ -107,6 +95,18 @@ class Trade(BaseModel):
     def is_participant(self, user_id: int) -> bool:
 
         return user_id in [self.initiator_id, self.acceptor_id]
+
+def validate_given_and_received(given: list[str], received: list[str]) -> str | None:
+    if not given:
+        return "Je moet minstens één kaart kiezen die je wilt weggeven."
+
+    if not received:
+        return "Je moet minstens één kaart kiezen die je wilt ontvangen."
+
+    if set(given) & set(received):
+        return "Je kunt geen kaarten ontvangen die je zelf al hebt gekozen om weg te geven."
+
+    return None
 
 
 def create_tables() -> None:
