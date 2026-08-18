@@ -70,10 +70,10 @@ class TradeType(Enum):
     SUPER_TROOP = 3
 
 TRADE_TYPES = {
-    TradeType.ELIXIR: ("Elixer", discord.Color.pink(), ELIXIR_CARDS),
-    TradeType.DARK_ELIXIR: ("Dark Elixer", discord.Color.dark_purple(), DARK_ELIXIR_CARDS),
-    TradeType.BUILDER_BASE: ("Builder Base", discord.Color.blue(), BUILDER_BASE_CARDS),
-    TradeType.SUPER_TROOP: ("Super Troop", discord.Color.orange(), SUPER_TROOP_CARDS)
+    TradeType.ELIXIR: (discord.Color.pink(), ELIXIR_CARDS),
+    TradeType.DARK_ELIXIR: (discord.Color.dark_purple(), DARK_ELIXIR_CARDS),
+    TradeType.BUILDER_BASE: (discord.Color.blue(), BUILDER_BASE_CARDS),
+    TradeType.SUPER_TROOP: (discord.Color.orange(), SUPER_TROOP_CARDS)
 }
 
 

@@ -3,7 +3,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from data.database import TradeType, get_guild, TRADE_TYPES, get_trade_type_color
+from data.database import TradeType, get_guild, TRADE_TYPES
+from views.trade_setup import TradeSetupView
 
 
 class Trade(commands.GroupCog, group_name="trade", group_description="Wissel kaarten uit voor het Clash of Cards evenement"):
@@ -62,25 +63,26 @@ class Trade(commands.GroupCog, group_name="trade", group_description="Wissel kaa
 
 
         guild_clans = guild.get_clans()
-        name, color, cards = TRADE_TYPES[trade_type]
-
+        color, cards = TRADE_TYPES[trade_type]
         
-        embed = discord.Embed(
+        trade_setup_embed = discord.Embed(
             title="Clash of Cards",
             description=(
-                "Kaarten op overschot en dringend op zoek naar die laatste kaarten "
-                "om je set te voltooien? Kijk snel hieronder!\n\n"
-                "• Kies de kaarten die je wilt weggeven\n"
-                "• Kies de kaarten die je wilt ontvangen\n"
+                "Kaarten op overschot en dringend op zoek naar die laatste kaarten om je set te voltooien? Kijk snel hieronder!\n\n"
+                f"• Kies de kaarten die je wilt weggeven\n"
+                f"• Kies de kaarten die je wilt ontvangen\n\n"
             ),
             color=color
         )
 
         if guild_clans:
-            embed.description += "• Kies de clan waar je de kaarten wilt ruilen\n"
+            trade_setup_embed.description += "• Kies de clan waar je de kaarten wilt ruilen\n"                                
+
+        trade_setup_view = TradeSetupView(trade_type, guild)
 
         await interaction.response.send_message(
-            embed=embed,
+            embed=trade_setup_embed,
+            view=trade_setup_view,
             ephemeral=True,
         )
 
