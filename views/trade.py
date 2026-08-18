@@ -1,6 +1,115 @@
 import discord
 
+from data.database import TRADE_TYPES, Trade, TradeType
+
 class TradeView(discord.ui.View):
 
-    def __init__(self):
+    def __init__(self, trade: Trade):
         super().__init__(timeout=None)
+
+        self.trade = trade
+
+        self.add_item(AcceptButton())
+
+class AcceptButton(discord.ui.Button):
+
+    def __init__(self):
+        super().__init__(
+            label="Accepteren",
+            style=discord.ButtonStyle.primary,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+
+        assert isinstance(self.view, TradeView), "This button can only be used within a TradeView."
+
+        ## Get the trade parameters
+
+        trade = self.view.trade
+        color, cards = TRADE_TYPES[TradeType(trade.type)]
+
+        acceptor = interaction.user
+
+        ## Validating the raw data
+
+        if not trade.can_accept(acceptor.id):
+
+            trade_error_embed = discord.Embed(
+                title="Clash of Cards",
+                description="Je kunt je eigen ruilvoorstel niet accepteren.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
+
+        ## Update the trade object
+
+        trade.acceptor_id = acceptor.id
+
+        ## Update the trade message embed
+
+        trade_message_embed = interaction.message.embeds[0]
+        trade_message_embed.color = discord.Color.green()
+        trade_message_embed.set_footer(text=f"Ruilvoorstel geaccepteerd door {acceptor.display_name}!", icon_url=acceptor.display_avatar.url)
+
+        await interaction.message.edit(embed=trade_message_embed, view=None)
+
+        ## Build the trade thread
+
+        trade_initiator = interaction.guild.get_member(trade.initiator_id)
+        trade_acceptor = interaction.guild.get_member(trade.acceptor_id)
+
+        if not trade_initiator or not trade_acceptor:
+            trade_error_embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"**Er is een fout opgetreden bij het ophalen van de gebruikersgegevens.**",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
+
+        trade_thread_name = f"{trade_initiator.display_name} & {trade_acceptor.display_name}"
+
+        ## Create the thread
+
+        thread = await interaction.message.create_thread(name=trade_thread_name)
+
+        ## Build the trade thread message
+
+        thread_message_content = f"{trade_initiator.mention} & {trade_acceptor.mention}"
+
+        thread_message_embed = discord.Embed(
+            title="Clash of Cards",
+            description=(
+                f"Deze thread is aangemaakt om de ruil tussen {trade_initiator.mention} en {trade_acceptor.mention} verder te bespreken.\n "
+            ),
+            color=color
+        )
+
+        if trade.clan:
+            thread_message_embed.add_field(
+                name="Bekijk de ruil",
+                value="Link naar de clan waar de ruil zal plaatsvinden.",
+                inline=False
+            )
+
+        ## Send the trade thread message to the thread
+
+        thread_message = await thread.send(
+            content=thread_message_content,
+            embed=thread_message_embed
+        )
+
+        ## Save the trade to the database
+
+        trade.thread_id = thread_message.id
+        trade.save()
+
+
+
+
+
+        
+
+
+    

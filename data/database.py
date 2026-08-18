@@ -83,6 +83,7 @@ class Trade(BaseModel):
     given = JSONField()
     received = JSONField()
     message_id = IntegerField(null=True)
+    thread_id = IntegerField(null=True)
     initiator_id = IntegerField()
     acceptor_id = IntegerField(null=True)
     guild = ForeignKeyField(Guild, backref="trades")
