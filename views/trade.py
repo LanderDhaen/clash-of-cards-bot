@@ -10,6 +10,7 @@ class TradeView(discord.ui.View):
         self.trade = trade
 
         self.add_item(AcceptButton())
+        self.add_item(CancelButton())
 
 class AcceptButton(discord.ui.Button):
 
@@ -30,7 +31,7 @@ class AcceptButton(discord.ui.Button):
 
         acceptor = interaction.user
 
-        ## Validating the raw data
+        ## Validating the interaction
 
         if not trade.can_accept(acceptor.id):
 
@@ -105,7 +106,45 @@ class AcceptButton(discord.ui.Button):
         trade.thread_id = thread_message.id
         trade.save()
 
+class CancelButton(discord.ui.Button):
 
+    def __init__(self):
+
+        super().__init__(
+            label="Annuleren",
+            style=discord.ButtonStyle.secondary,
+            emoji="🗑️"
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+
+        assert isinstance(self.view, TradeView), "This button can only be used within a TradeView."
+
+        trade = self.view.trade
+
+        ## Validating the interaction
+
+        if not trade.can_cancel(interaction.user.id):
+
+            trade_error_embed = discord.Embed(
+                title="Clash of Cards",
+                description="Je kunt alleen je eigen ruilvoorstel annuleren.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
+
+        ## Update the trade message embed
+
+        trade_message_embed = interaction.message.embeds[0]
+        trade_message_embed.color = discord.Color.green()
+        trade_message_embed.set_footer(text=f"Ruilvoorstel geannuleerd door {interaction.user.display_name}!", icon_url=interaction.user.display_avatar.url)
+
+        await interaction.response.edit_message(embed=trade_message_embed, view=None, delete_after=30)
+
+        ## Delete the trade from the database
+
+        trade.delete_instance()
 
 
 

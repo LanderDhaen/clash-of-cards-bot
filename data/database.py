@@ -93,6 +93,10 @@ class Trade(BaseModel):
 
         return self.initiator_id != user_id
 
+    def can_cancel(self, user_id: int) -> bool:
+
+        return self.initiator_id == user_id
+
     def is_participant(self, user_id: int) -> bool:
 
         return user_id in [self.initiator_id, self.acceptor_id]
