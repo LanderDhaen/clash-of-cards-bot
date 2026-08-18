@@ -1,18 +1,17 @@
 import discord
 
 from data.trade import Trade
-from data.cards import Card
 from data.database import Clan, get_clan, get_guild
 from views.trade import TradeView
 
 class TradeSetupView(discord.ui.View):
 
-    def __init__(self, color: discord.Colour, cards: list[Card], clans: list[Clan]):
+    def __init__(self, color: discord.Colour, cards: list[str], clans: list[Clan]):
         super().__init__(timeout=300)
 
         self.color = color
 
-        self.card_options = [discord.SelectOption(label=card.name) for card in cards]
+        self.card_options = [discord.SelectOption(label=card) for card in cards]
         self.clan_options = [discord.SelectOption(label=clan.name, value=clan.tag) for clan in clans]
 
         max_values = len(self.card_options)

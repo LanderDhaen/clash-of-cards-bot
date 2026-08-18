@@ -16,7 +16,7 @@ class Guild(BaseModel):
     def has_clan(self, clan_tag: str) -> bool:
         return Clan.select().where((Clan.guild == self) & (Clan.tag == clan_tag)).exists()
 
-    def add_clan(self, clan_tag: str, clan_name: str) -> "Clan":
+    def add_clan(self, clan_tag: str, clan_name: str) -> Clan:
         return Clan.create(tag = clan_tag, name = clan_name, guild = self)
 
     def remove_clan(self, clan_tag: str) -> Clan:
@@ -53,6 +53,17 @@ class Clan(BaseModel):
 def get_clan(clan_tag: str, guild_id: int) -> Clan | None:
     return Clan.get_or_none((Clan.tag == clan_tag) & (Clan.guild == guild_id))
 
+class Trade(BaseModel):
+    trade_id = IntegerField(primary_key=True)
+    type = IntegerField(choices=[(0, "Elixer"), (1, "Dark Elixer"), (2, "Builder Base"), (3, "Super Troop") ])
+    given = JSONField()
+    received = JSONField()
+    initiator_id = IntegerField()
+    acceptor_id = IntegerField(null=True)
+    message_id = IntegerField()
+    guild = ForeignKeyField(Guild, backref="trades")
+    clan = ForeignKeyField(Clan, null=True)
+
 def create_tables() -> None:
     with db:
-        db.create_tables([Guild, Clan], safe=True)
+        db.create_tables([Guild, Clan, Trade], safe=True)
