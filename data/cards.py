@@ -7,7 +7,7 @@ class Card:
 
 
 
-ELIXIR = [
+ELIXIR_CARDS = [
     Card(type="Elixir", name="Barbarian"),
     Card(type="Elixir", name="Archer"),
     Card(type="Elixir", name="Giant"),
@@ -29,7 +29,7 @@ ELIXIR = [
     Card(type="Elixir", name="Meteor Golem")
 ]
 
-DARK_ELIXIR = [
+DARK_ELIXIR_CARDS = [
     Card(type="Dark Elixir", name="Minion"),
     Card(type="Dark Elixir", name="Hog Rider"),
     Card(type="Dark Elixir", name="Valkyrie"),
@@ -45,7 +45,7 @@ DARK_ELIXIR = [
     Card(type="Dark Elixir", name="Ruin Witch")
 ]
 
-BUILDER_BASE = [
+BUILDER_BASE_CARDS = [
     Card(type="Builder Base", name="Raged Barbarian"),
     Card(type="Builder Base", name="Sneaky Archer"),
     Card(type="Builder Base", name="Boxer Giant"),
@@ -59,7 +59,7 @@ BUILDER_BASE = [
     Card(type="Builder Base", name="Hog Glider")
 ]
 
-SUPER_TROOP = [
+SUPER_TROOP_CARDS = [
     Card(type="Super Troop", name="Super Barbarian"),
     Card(type="Super Troop", name="Super Archer"),
     Card(type="Super Troop", name="Super Giant"),

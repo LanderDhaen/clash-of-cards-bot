@@ -3,8 +3,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from data.cards import ELIXIR, DARK_ELIXIR, BUILDER_BASE, SUPER_TROOP
 from data.database import get_guild
+from data.trade import TRADE_TYPES, TradeType
 from views.trade_setup import TradeSetupView
 
 
@@ -17,55 +17,44 @@ class Trade(commands.GroupCog, group_name="trade", group_description="Wissel kaa
         description="Wissel elixirkaarten uit voor het Clash of Cards evenement"
     )
     async def trade_elixir(self, interaction: discord.Interaction):
-        await self.setup_trade(
-            interaction,
-            discord.Color.pink(),
-            ELIXIR
-        )
+        await self.setup_trade(interaction, TradeType.ELIXIR)
 
     @app_commands.command(
         name="dark-elixir",
         description="Wissel duister-elixirkaarten uit voor het Clash of Cards evenement"
     )
     async def trade_dark_elixir(self, interaction: discord.Interaction):
-        await self.setup_trade(
-            interaction,
-            discord.Color.dark_purple(),
-            DARK_ELIXIR
-        )
+        await self.setup_trade(interaction, TradeType.DARK_ELIXIR)
 
     @app_commands.command(
         name="builder-base",
         description="Wissel bouwersbasiskaarten uit voor het Clash of Cards evenement"
     )
     async def trade_builder_base(self, interaction: discord.Interaction):
-        await self.setup_trade(
-            interaction,
-            discord.Color.blue(),
-            BUILDER_BASE
-        )
+        await self.setup_trade(interaction, TradeType.BUILDER_BASE)
+
 
     @app_commands.command(
         name="super-troop",
         description="Wissel supertroepkaarten uit voor het Clash of Cards evenement"
     )
     async def trade_super_troop(self, interaction: discord.Interaction):
-        await self.setup_trade(
-            interaction,
-            discord.Color.orange(),
-            SUPER_TROOP
-        )
+        await self.setup_trade(interaction, TradeType.SUPER_TROOP)
+
 
     async def setup_trade(
         self,
         interaction: discord.Interaction,
-        color: discord.Color,
-        cards: list[str]
+        trade_type: TradeType
     ):
 
         guild = get_guild(interaction.guild.id)
+
+        ## TODO: Check if the guild exists and return error message if not
+
         guild_clans = guild.get_clans()
-        
+        name, color, cards = TRADE_TYPES[trade_type]
+
         embed = discord.Embed(
             title="Clash of Cards",
             description=(
