@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from data.database import TradeType, get_guild, TRADE_TYPES
+from data.database import TradeType, get_guild, TRADE_TYPES, get_trade_type_color
 
 
 class Trade(commands.GroupCog, group_name="trade", group_description="Wissel kaarten uit voor het Clash of Cards evenement"):
@@ -46,13 +46,25 @@ class Trade(commands.GroupCog, group_name="trade", group_description="Wissel kaa
         trade_type: TradeType
     ):
 
+        ## Check if the server is set up
+
         guild = get_guild(interaction.guild.id)
 
-        ## TODO: Check if the guild exists and return error message if not
+        if not guild:
+
+            embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"**{interaction.guild.name}** is nog niet ingesteld. Contacteer een beheerder.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+
 
         guild_clans = guild.get_clans()
         name, color, cards = TRADE_TYPES[trade_type]
 
+        
         embed = discord.Embed(
             title="Clash of Cards",
             description=(
