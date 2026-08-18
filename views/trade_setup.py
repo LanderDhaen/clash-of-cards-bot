@@ -1,6 +1,7 @@
 import discord
 
 from data.database import TRADE_TYPES, Trade, TradeType, Guild, validate_given_and_received
+from views.trade import TradeView
 
 class TradeSetupView(discord.ui.View):
 
@@ -46,6 +47,7 @@ class TradeSetupView(discord.ui.View):
         ## Clan Select (if the guild has clans)
 
         self.clan_options = []
+        self.clan_select = None
 
         guild_clans = self.guild.get_clans()
 
@@ -100,7 +102,7 @@ class ConfirmButton(discord.ui.Button):
 
         assert isinstance(self.view, TradeSetupView), "This button can only be used within a TradeSetupView."
 
-        ## Build the trade
+        ## Get the trade parameters
 
         guild = self.view.guild
 
@@ -132,6 +134,7 @@ class ConfirmButton(discord.ui.Button):
             given = given,
             received = received,
             message_id = None,
+            thread_id = None,
             initiator_id = initiator.id,
             acceptor_id = None,
             guild = guild,
@@ -142,25 +145,15 @@ class ConfirmButton(discord.ui.Button):
 
         trader_role = interaction.guild.get_role(guild.trader_role_id)
         trade_channel = interaction.guild.get_channel(guild.trade_channel_id)
-        trade_initiator = interaction.guild.get_member(trade.initiator_id)
 
         trade_message_content = trader_role.mention if trader_role else None
-
-        if not trade_initiator:
-            trade_error_embed = discord.Embed(
-                title="Clash of Cards",
-                description=f"**Er is een fout opgetreden bij het ophalen van je gebruikersgegevens.**",
-                color=discord.Color.red()
-            )
-
-            return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
 
         trade_message_embed = discord.Embed(
             title="Clash of Cards",
             description=(
-                f"{trade_initiator.mention} wilt kaarten ruilen in **{trade.clan.name}**:\n"
+                f"{initiator.mention} wilt kaarten ruilen in **{trade.clan.name}**:\n"
                 if trade.clan
-                else f"{trade_initiator.mention} wilt kaarten ruilen:\n"
+                else f"{initiator.mention} wilt kaarten ruilen:\n"
             ),
             color=self.view.color
         )
@@ -188,17 +181,22 @@ class ConfirmButton(discord.ui.Button):
 
             return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
 
+        trade_message_view = TradeView(trade)
+
         trade_message = await trade_channel.send(
             content=trade_message_content,
-            embed=trade_message_embed
+            embed=trade_message_embed,
+            view=trade_message_view
         )
 
         await interaction.response.edit_message(content=f"Je ruilvoorstel is verzonden naar {trade_message.jump_url}.", embed=None, view=None)
 
-        ## Update the trade object with the message ID and save it to the database
+        ## Save the trade to the database
 
         trade.message_id = trade_message.id
         trade.save()
+
+        
 
 class CancelButton(discord.ui.Button):
 
