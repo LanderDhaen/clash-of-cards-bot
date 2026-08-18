@@ -71,6 +71,7 @@ class TradeSetupView(discord.ui.View):
         ## Buttons
 
         self.add_item(ConfirmButton())
+        self.add_item(CancelButton())
 
 class TradeSetupSelect(discord.ui.Select):
 
@@ -92,7 +93,7 @@ class ConfirmButton(discord.ui.Button):
     def __init__(self):
         super().__init__(
             label="Bevestigen",
-            style=discord.ButtonStyle.green
+            style=discord.ButtonStyle.primary,
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -131,7 +132,7 @@ class ConfirmButton(discord.ui.Button):
             given = given,
             received = received,
             message_id = None,
-            initiator_id = interaction.user.id,
+            initiator_id = initiator.id,
             acceptor_id = None,
             guild = guild,
             clan = clan
@@ -141,7 +142,7 @@ class ConfirmButton(discord.ui.Button):
 
         trader_role = interaction.guild.get_role(guild.trader_role_id)
         trade_channel = interaction.guild.get_channel(guild.trade_channel_id)
-        trade_initiator = interaction.guild.get_member(interaction.user.id)
+        trade_initiator = interaction.guild.get_member(trade.initiator_id)
 
         trade_message_content = trader_role.mention if trader_role else None
 
@@ -199,6 +200,18 @@ class ConfirmButton(discord.ui.Button):
         trade.message_id = trade_message.id
         trade.save()
 
+class CancelButton(discord.ui.Button):
+
+    def __init__(self):
+
+        super().__init__(
+            label="Annuleren",
+            style=discord.ButtonStyle.secondary,
+            emoji="🗑️"
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.edit_message(content="Je hebt deze ruil geannuleerd.", embed=None, view=None)
         
 
         
