@@ -8,23 +8,11 @@ from data.cards import BUILDER_BASE_CARDS, DARK_ELIXIR_CARDS, ELIXIR_CARDS, SUPE
 
 db = SqliteDatabase("database.db")
 
-class TradeType(Enum):
-    ELIXIR = 0
-    DARK_ELIXIR = 1
-    BUILDER_BASE = 2
-    SUPER_TROOP = 3
-
-TRADE_TYPES = {
-    TradeType.ELIXIR: ("Elixer", discord.Color.pink(), ELIXIR_CARDS),
-    TradeType.DARK_ELIXIR: ("Dark Elixer", discord.Color.dark_purple(), DARK_ELIXIR_CARDS),
-    TradeType.BUILDER_BASE: ("Builder Base", discord.Color.blue(), BUILDER_BASE_CARDS),
-    TradeType.SUPER_TROOP: ("Super Troop", discord.Color.orange(), SUPER_TROOP_CARDS)
-}
-
-
 class BaseModel(Model):
     class Meta:
         database = db
+
+## Guild
 
 class Guild(BaseModel):
     guild_id = IntegerField(primary_key=True)
@@ -63,6 +51,8 @@ def create_guild(guild_id: int, trader_role_id: int, trade_channel_id: int) -> G
         trade_channel_id=trade_channel_id
     )
 
+## Clan
+
 class Clan(BaseModel):
     tag = CharField(primary_key=True)
     name = CharField()
@@ -70,6 +60,22 @@ class Clan(BaseModel):
 
 def get_clan(clan_tag: str, guild_id: int) -> Clan | None:
     return Clan.get_or_none((Clan.tag == clan_tag) & (Clan.guild == guild_id))
+
+## Trade
+
+class TradeType(Enum):
+    ELIXIR = 0
+    DARK_ELIXIR = 1
+    BUILDER_BASE = 2
+    SUPER_TROOP = 3
+
+TRADE_TYPES = {
+    TradeType.ELIXIR: ("Elixer", discord.Color.pink(), ELIXIR_CARDS),
+    TradeType.DARK_ELIXIR: ("Dark Elixer", discord.Color.dark_purple(), DARK_ELIXIR_CARDS),
+    TradeType.BUILDER_BASE: ("Builder Base", discord.Color.blue(), BUILDER_BASE_CARDS),
+    TradeType.SUPER_TROOP: ("Super Troop", discord.Color.orange(), SUPER_TROOP_CARDS)
+}
+
 
 class Trade(BaseModel):
     trade_id = IntegerField(primary_key=True)
