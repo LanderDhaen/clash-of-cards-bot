@@ -3,9 +3,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from data.database import get_guild
-from data.trade import TRADE_TYPES, TradeType
-from views.trade_setup import TradeSetupView
+from data.database import TradeType, get_guild, TRADE_TYPES
 
 
 class Trade(commands.GroupCog, group_name="trade", group_description="Wissel kaarten uit voor het Clash of Cards evenement"):
@@ -72,7 +70,6 @@ class Trade(commands.GroupCog, group_name="trade", group_description="Wissel kaa
         await interaction.response.send_message(
             embed=embed,
             ephemeral=True,
-            view=TradeSetupView(color, cards, guild_clans)
         )
 
 
