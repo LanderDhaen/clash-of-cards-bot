@@ -1,6 +1,7 @@
 import discord
 
 from data.database import TRADE_TYPES, Trade, TradeType
+from views.trade_accept import TradeAcceptView
 
 class TradeView(discord.ui.View):
 
@@ -87,6 +88,18 @@ class AcceptButton(discord.ui.Button):
             color=color
         )
 
+        thread_message_embed.add_field(
+            name="Afronden",
+            value="Wanneer de kaarten uitgewisseld zijn, kan de ruil worden afgerond.",
+            inline=False
+        )
+
+        thread_message_embed.add_field(
+            name="Annuleren",
+            value="Als een van de partijen niet langer geïnteresseerd is in de ruil, kan deze worden geannuleerd.",
+            inline=False
+        )
+
         if trade.clan:
             thread_message_embed.add_field(
                 name="Bekijk de ruil",
@@ -94,11 +107,14 @@ class AcceptButton(discord.ui.Button):
                 inline=False
             )
 
+        thread_message_view = TradeAcceptView(trade)
+
         ## Send the trade thread message to the thread
 
         thread_message = await thread.send(
             content=thread_message_content,
-            embed=thread_message_embed
+            embed=thread_message_embed,
+            view=thread_message_view
         )
 
         ## Save the trade to the database
