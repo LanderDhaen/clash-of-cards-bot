@@ -45,10 +45,6 @@ class AcceptButton(discord.ui.Button):
 
             return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
 
-        ## Update the trade object
-
-        trade.acceptor_id = acceptor.id
-
         ## Update the trade message embed
 
         trade_message_embed = interaction.message.embeds[0]
@@ -60,9 +56,8 @@ class AcceptButton(discord.ui.Button):
         ## Build the trade thread
 
         trade_initiator = interaction.guild.get_member(trade.initiator_id)
-        trade_acceptor = interaction.guild.get_member(trade.acceptor_id)
 
-        if not trade_initiator or not trade_acceptor:
+        if not trade_initiator or not acceptor:
             trade_error_embed = discord.Embed(
                 title="Clash of Cards",
                 description=f"**Er is een fout opgetreden bij het ophalen van de gebruikersgegevens.**",
@@ -71,7 +66,7 @@ class AcceptButton(discord.ui.Button):
 
             return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
 
-        trade_thread_name = f"{trade_initiator.display_name} & {trade_acceptor.display_name}"
+        trade_thread_name = f"{trade_initiator.display_name} & {acceptor.display_name}"
 
         ## Create the thread
 
@@ -79,12 +74,12 @@ class AcceptButton(discord.ui.Button):
 
         ## Build the trade thread message
 
-        thread_message_content = f"{trade_initiator.mention} & {trade_acceptor.mention}"
+        thread_message_content = f"{trade_initiator.mention} & {acceptor.mention}"
 
         thread_message_embed = discord.Embed(
             title="Clash of Cards",
             description=(
-                f"Deze thread is aangemaakt om de ruil tussen {trade_initiator.mention} en {trade_acceptor.mention} verder te bespreken.\n "
+                f"Deze thread is aangemaakt om de ruil tussen {trade_initiator.mention} en {acceptor.mention} verder te bespreken.\n "
             ),
             color=color
         )
@@ -120,6 +115,7 @@ class AcceptButton(discord.ui.Button):
 
         ## Save the trade to the database
 
+        trade.acceptor_id = acceptor.id
         trade.thread_id = thread_message.id
         trade.save()
 

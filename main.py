@@ -45,6 +45,8 @@ class TradeBot(commands.Bot):
                 self.add_view(TradeView(trade), message_id=trade.message_id)
             elif trade.message_id and trade.thread_id:
                 self.add_view(TradeAcceptView(trade), message_id=trade.thread_id)
+
+        logger.info("%s trade(s) loaded successfully.", len(trades))
             
         logger.info("%s is online and ready to be used!", self.user.name)
 

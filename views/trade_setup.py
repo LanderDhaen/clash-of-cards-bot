@@ -108,7 +108,7 @@ class ConfirmButton(discord.ui.Button):
         guild = self.view.guild
 
         initiator = interaction.user
-        given = self.view.given_select.values
+        given = self.view.given_select.values 
         received = self.view.received_select.values
 
         clan_tag = self.view.clan_select.values[0] if self.view.clan_select and self.view.clan_select.values else None

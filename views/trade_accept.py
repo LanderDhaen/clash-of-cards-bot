@@ -125,6 +125,8 @@ class CancelButton(discord.ui.Button):
                 color=discord.Color.red()
             )
 
+            return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
+
         trade_message = await trade_channel.fetch_message(trade.message_id)
 
         trade_message_embed = trade_message.embeds[0]
