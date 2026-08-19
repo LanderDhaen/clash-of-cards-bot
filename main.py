@@ -4,7 +4,9 @@ import discord
 from typing import Literal
 from discord.ext import commands
 from config import TOKEN, IS_DEVELOPMENT
-from data.database import create_tables
+from data.database import create_tables, get_trades
+from views.trade import TradeView
+from views.trade_accept import TradeAcceptView
 
 LOG_LEVEL = logging.DEBUG if IS_DEVELOPMENT else logging.INFO
 LOG_FORMAT = "%(asctime)s %(levelname)-8s %(name)s %(message)s"
@@ -36,7 +38,16 @@ class TradeBot(commands.Bot):
         count = await self.get_command_count()
         logger.info("%s command(s) loaded successfully.", count)
 
-    async def on_ready(self):
+        trades = get_trades()
+
+        for trade in trades:
+            if trade.message_id and not trade.thread_id:
+                self.add_view(TradeView(trade), message_id=trade.message_id)
+            elif trade.message_id and trade.thread_id:
+                self.add_view(TradeAcceptView(trade), message_id=trade.thread_id)
+
+        logger.info("%s trade(s) loaded successfully.", len(trades))
+            
         logger.info("%s is online and ready to be used!", self.user.name)
 
     async def get_uptime(self):
@@ -53,6 +64,7 @@ class TradeBot(commands.Bot):
 
 
 intents = discord.Intents.default()
+intents.members = True
 intents.message_content = True
 
 bot = TradeBot(command_prefix="dev!" if IS_DEVELOPMENT else "!", intents=intents)
