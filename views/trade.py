@@ -51,7 +51,7 @@ class AcceptButton(discord.ui.Button):
         trade_message_embed.color = discord.Color.green()
         trade_message_embed.set_footer(text=f"Ruilvoorstel geaccepteerd door {acceptor.display_name}!", icon_url=acceptor.display_avatar.url)
 
-        await interaction.message.edit(embed=trade_message_embed, view=None)
+        await interaction.response.edit_message(embed=trade_message_embed, view=None)
 
         ## Build the trade thread
 
