@@ -16,7 +16,8 @@ class TradeAcceptView(discord.ui.View):
             self.add_item(discord.ui.Button(
                 label="Bekijk de ruil", 
                 url=f"https://link.clashofclans.com/en?action=OpenClanProfile&tag={trade.clan.tag}", 
-                style=discord.ButtonStyle.link
+                style=discord.ButtonStyle.link,
+                custom_id="view_clan",
                 )
             )
 
@@ -26,7 +27,8 @@ class FinishButton(discord.ui.Button):
     def __init__(self):
         super().__init__(
             label="Afronden",
-            style=discord.ButtonStyle.primary
+            style=discord.ButtonStyle.primary,
+            custom_id="finish_trade_accept"
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -83,7 +85,8 @@ class CancelButton(discord.ui.Button):
         super().__init__(
             label="Annuleren",
             style=discord.ButtonStyle.secondary,
-            emoji="🗑️"
+            emoji="🗑️",
+            custom_id="cancel_trade_accept"
         )
 
     async def callback(self, interaction: discord.Interaction):

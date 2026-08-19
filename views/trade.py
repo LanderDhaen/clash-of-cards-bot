@@ -19,6 +19,7 @@ class AcceptButton(discord.ui.Button):
         super().__init__(
             label="Accepteren",
             style=discord.ButtonStyle.primary,
+            custom_id="accept_trade"
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -129,7 +130,8 @@ class CancelButton(discord.ui.Button):
         super().__init__(
             label="Annuleren",
             style=discord.ButtonStyle.secondary,
-            emoji="🗑️"
+            emoji="🗑️",
+            custom_id="cancel_trade"
         )
 
     async def callback(self, interaction: discord.Interaction):

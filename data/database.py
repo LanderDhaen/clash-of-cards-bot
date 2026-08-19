@@ -101,6 +101,9 @@ class Trade(BaseModel):
 
         return user_id in [self.initiator_id, self.acceptor_id]
 
+def get_trades() -> list[Trade]:
+    return Trade.select()
+
 def validate_given_and_received(given: list[str], received: list[str]) -> str | None:
     if not given:
         return "Je moet minstens één kaart kiezen die je wilt weggeven."

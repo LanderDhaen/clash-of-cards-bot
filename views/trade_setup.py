@@ -96,6 +96,7 @@ class ConfirmButton(discord.ui.Button):
         super().__init__(
             label="Bevestigen",
             style=discord.ButtonStyle.primary,
+            custom_id="confirm_trade_setup"
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -205,7 +206,8 @@ class CancelButton(discord.ui.Button):
         super().__init__(
             label="Annuleren",
             style=discord.ButtonStyle.secondary,
-            emoji="🗑️"
+            emoji="🗑️",
+            custom_id="cancel_trade_setup"
         )
 
     async def callback(self, interaction: discord.Interaction):
