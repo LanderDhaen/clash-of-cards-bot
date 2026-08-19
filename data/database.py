@@ -6,7 +6,7 @@ from peewee import *
 from data.cards import BUILDER_BASE_CARDS, DARK_ELIXIR_CARDS, ELIXIR_CARDS, SUPER_TROOP_CARDS
 
 
-db = SqliteDatabase("database.db")
+db = SqliteDatabase("data/database.db")
 
 class BaseModel(Model):
     class Meta:
