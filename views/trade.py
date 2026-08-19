@@ -34,15 +34,15 @@ class AcceptButton(discord.ui.Button):
 
         ## Validate the interaction
 
-        # if not trade.can_accept(acceptor.id):
+        if not trade.can_accept(acceptor.id):
 
-        #     trade_error_embed = discord.Embed(
-        #         title="Clash of Cards",
-        #         description="Je kunt je eigen ruilvoorstel niet accepteren.",
-        #         color=discord.Color.red()
-        #     )
+            trade_error_embed = discord.Embed(
+                title="Clash of Cards",
+                description="Je kunt je eigen ruilvoorstel niet accepteren.",
+                color=discord.Color.red()
+            )
 
-        #     return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
+            return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
 
         ## Update the trade object
 

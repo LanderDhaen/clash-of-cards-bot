@@ -12,6 +12,14 @@ class TradeAcceptView(discord.ui.View):
         self.add_item(FinishButton())
         self.add_item(CancelButton())
 
+        if trade.clan:
+            self.add_item(discord.ui.Button(
+                label="Bekijk de ruil", 
+                url=f"https://link.clashofclans.com/en?action=OpenClanProfile&tag={trade.clan.tag}", 
+                style=discord.ButtonStyle.link
+                )
+            )
+
 
 class FinishButton(discord.ui.Button):
 
@@ -130,7 +138,4 @@ class CancelButton(discord.ui.Button):
         trade.acceptor_id = None
         trade.thread_id = None
         trade.save()
- 
-
-
 
