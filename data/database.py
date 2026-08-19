@@ -3,10 +3,11 @@ from enum import Enum
 import discord
 from peewee import *
 
+from config import IS_DEVELOPMENT
 from data.cards import BUILDER_BASE_CARDS, DARK_ELIXIR_CARDS, ELIXIR_CARDS, SUPER_TROOP_CARDS
 
 
-db = SqliteDatabase("/db/database.db")
+db = SqliteDatabase("db/database.db" if IS_DEVELOPMENT else "/db/database.db")
 
 class BaseModel(Model):
     class Meta:
