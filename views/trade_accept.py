@@ -1,6 +1,6 @@
 import discord
 
-from data.database import Trade
+from data.database import TRADE_TYPES, Trade, TradeType
 
 class TradeAcceptView(discord.ui.View):
 
@@ -10,6 +10,7 @@ class TradeAcceptView(discord.ui.View):
         self.trade = trade
 
         self.add_item(FinishButton())
+        self.add_item(CancelButton())
 
 
 class FinishButton(discord.ui.Button):
@@ -29,6 +30,8 @@ class FinishButton(discord.ui.Button):
         trade = self.view.trade
         finisher = interaction.user
 
+        ## Validate the interaction
+
         if not trade.is_participant(finisher.id):
 
             trade_error_embed = discord.Embed(
@@ -43,7 +46,7 @@ class FinishButton(discord.ui.Button):
 
         trade_channel = interaction.guild.get_channel(trade.guild.trade_channel_id)
 
-        if not trade_channel and not isinstance(trade_channel, discord.TextChannel):
+        if not isinstance(trade_channel, discord.TextChannel):
             trade_error_embed = discord.Embed(
                 title="Clash of Cards",
                 description=f"**{interaction.guild.name}** is niet correct ingesteld. Contacteer een beheerder.",
@@ -53,15 +56,6 @@ class FinishButton(discord.ui.Button):
             return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
 
         trade_message = await trade_channel.fetch_message(trade.message_id)
-
-        if not trade_message:
-            trade_error_embed = discord.Embed(
-                title="Clash of Cards",
-                description="Het ruilvoorstel kon niet worden gevonden.",
-                color=discord.Color.red()
-            )
-
-            return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
     
         trade_message_embed = trade_message.embeds[0]
         trade_message_embed.color = discord.Color.green()
@@ -73,6 +67,70 @@ class FinishButton(discord.ui.Button):
         ## Delete the trade
 
         trade.delete_instance()
+
+class CancelButton(discord.ui.Button):
+
+    def __init__(self):
+
+        super().__init__(
+            label="Annuleren",
+            style=discord.ButtonStyle.secondary,
+            emoji="🗑️"
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+
+        from views.trade import TradeView
+
+        assert isinstance(self.view, TradeAcceptView), "This button can only be used within a TradeAcceptView."
+
+        ## Get the trade parameters
+
+        trade = self.view.trade
+        color, cards = TRADE_TYPES[TradeType(trade.type)]
+
+        canceler = interaction.user
+
+        ## Validate the interaction
+
+        if not trade.is_participant(canceler.id):
+
+            trade_error_embed = discord.Embed(
+                title="Clash of Cards",
+                description="Je kunt een ruilvoorstel waar je niet aan deelneemt niet annuleren.",
+                color=discord.Color.red()
+            )
+
+            return await interaction.response.send_message(embed=trade_error_embed, ephemeral=True)
+
+        ## Update the trade message embed
+
+        trade_channel = interaction.guild.get_channel(trade.guild.trade_channel_id)
+
+        if not isinstance(trade_channel, discord.TextChannel):
+            trade_error_embed = discord.Embed(
+                title="Clash of Cards",
+                description=f"**{interaction.guild.name}** is niet correct ingesteld. Contacteer een beheerder.",
+                color=discord.Color.red()
+            )
+
+        trade_message = await trade_channel.fetch_message(trade.message_id)
+
+        trade_message_embed = trade_message.embeds[0]
+        trade_message_embed.color = color
+        trade_message_embed.set_footer(text=None, icon_url=None)
+
+        trade_message_view = TradeView(trade)
+
+        await trade_message.edit(embed=trade_message_embed, view=trade_message_view)
+        await trade_message.thread.delete()
+
+        ## Save the trade to the database
+
+        trade.acceptor_id = None
+        trade.thread_id = None
+        trade.save()
+ 
 
 
 
