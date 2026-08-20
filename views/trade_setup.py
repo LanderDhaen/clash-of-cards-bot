@@ -206,11 +206,11 @@ class ConfirmButton(discord.ui.Button):
 
             confirmation_message_embed.description += "Jij kan één van de volgende voorstellen accepteren door op de link te klikken:\n\n"
             
-            for trade in possible_trades:
+            for possible_trade in possible_trades:
 
-                initiator = interaction.guild.get_member(trade.initiator_id)
+                initiator = interaction.guild.get_member(possible_trade.initiator_id)
                 confirmation_message_embed.description += (
-                    f"• [Bekijk de ruil](https://discord.com/channels/{trade.guild.guild_id}/{trade_channel.id}/{trade.message_id}) van {initiator.mention}\n"
+                    f"• [Bekijk de ruil](https://discord.com/channels/{possible_trade.guild.guild_id}/{trade_channel.id}/{possible_trade.message_id}) van {initiator.mention}\n"
                 )
 
         await interaction.response.edit_message(embed=confirmation_message_embed, view=None)
@@ -219,8 +219,6 @@ class ConfirmButton(discord.ui.Button):
 
         trade.message_id = trade_message.id
         trade.save()
-
-        
 
 class CancelButton(discord.ui.Button):
 
