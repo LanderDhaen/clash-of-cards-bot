@@ -190,7 +190,30 @@ class ConfirmButton(discord.ui.Button):
             view=trade_message_view
         )
 
-        await interaction.response.edit_message(content=f"Je ruilvoorstel is verzonden naar {trade_message.jump_url}.", embed=None, view=None)
+        ## Build the confirmation message
+
+        confirmation_message_embed = discord.Embed(
+            title="Clash of Cards",
+            description=(
+                f"Jouw nieuw voorstel is zonet verzonden naar {trade_message.jump_url}.\n\n"
+            ),
+            color=discord.Color.green()
+        )
+
+        possible_trades = trade.matching_trades()
+
+        if possible_trades:
+
+            confirmation_message_embed.description += "Jij kan één van de volgende voorstellen accepteren door op de link te klikken:\n\n"
+            
+            for trade in possible_trades:
+
+                initiator = interaction.guild.get_member(trade.initiator_id)
+                confirmation_message_embed.description += (
+                    f"• [Bekijk de ruil](https://discord.com/channels/{trade.guild.guild_id}/{trade_channel.id}/{trade.message_id}) van {initiator.mention}\n"
+                )
+
+        await interaction.response.edit_message(embed=confirmation_message_embed, view=None)
 
         ## Save the trade to the database
 
