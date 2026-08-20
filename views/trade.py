@@ -29,7 +29,7 @@ class AcceptButton(discord.ui.Button):
         ## Get the trade parameters
 
         trade = self.view.trade
-        color, cards = TRADE_TYPES[TradeType(trade.type)]
+        name, color, cards = TRADE_TYPES[TradeType(trade.type)]
 
         acceptor = interaction.user
 

@@ -3,10 +3,11 @@ from enum import Enum
 import discord
 from peewee import *
 
+from config import IS_DEVELOPMENT
 from data.cards import BUILDER_BASE_CARDS, DARK_ELIXIR_CARDS, ELIXIR_CARDS, SUPER_TROOP_CARDS
 
 
-db = SqliteDatabase("/db/database.db")
+db = SqliteDatabase("db/database.db" if IS_DEVELOPMENT else "/db/database.db")
 
 class BaseModel(Model):
     class Meta:
@@ -41,8 +42,14 @@ class Guild(BaseModel):
         self.trader_role_id = trader_role_id
         self.trade_channel_id = trade_channel_id
         self.save()
-        
 
+    def open_user_trades(self, user_id: int) -> list[Trade]:
+
+        return Trade.select().where(
+            (Trade.guild == self) &
+            (Trade.initiator_id == user_id) &
+            (Trade.acceptor_id.is_null(True))
+        ).order_by(Trade.type.asc(), Trade.trade_id.asc())
 
 def get_guild(guild_id: int) -> Guild | None:
     return Guild.get_or_none(Guild.guild_id == guild_id)
@@ -70,10 +77,10 @@ class TradeType(Enum):
     SUPER_TROOP = 3
 
 TRADE_TYPES = {
-    TradeType.ELIXIR: (discord.Color.pink(), ELIXIR_CARDS),
-    TradeType.DARK_ELIXIR: (discord.Color.dark_purple(), DARK_ELIXIR_CARDS),
-    TradeType.BUILDER_BASE: (discord.Color.blue(), BUILDER_BASE_CARDS),
-    TradeType.SUPER_TROOP: (discord.Color.orange(), SUPER_TROOP_CARDS)
+    TradeType.ELIXIR: ("Elixir", discord.Color.pink(), ELIXIR_CARDS),
+    TradeType.DARK_ELIXIR: ("Duister-elixir", discord.Color.dark_purple(), DARK_ELIXIR_CARDS),
+    TradeType.BUILDER_BASE: ("Bouwersbasis", discord.Color.blue(), BUILDER_BASE_CARDS),
+    TradeType.SUPER_TROOP: ("Supertroepen", discord.Color.orange(), SUPER_TROOP_CARDS)
 }
 
 
@@ -101,8 +108,33 @@ class Trade(BaseModel):
 
         return user_id in [self.initiator_id, self.acceptor_id]
 
+    def matching_trades(self) -> list[Trade]:
+
+        trades = Trade.select().where(
+            (Trade.type == self.type) &
+            (Trade.guild == self.guild) &
+            (Trade.acceptor_id.is_null(True)) & 
+            (Trade.initiator_id != self.initiator_id)
+        )
+
+        matching_trades = []
+
+        ## Check if any given cards match with the received cards of other trades and vice versa
+
+        for trade in trades:
+            if set(self.given) & set(trade.received) and set(self.received) & set(trade.given):
+                matching_trades.append(trade)
+
+        return matching_trades
+
 def get_trades() -> list[Trade]:
     return Trade.select()
+
+def get_open_user_trades(guild_id: int, user_id: int) -> list[Trade]:
+    return Trade.select().where(
+        (Trade.guild == guild_id) & 
+        ((Trade.initiator_id == user_id) & 
+         (Trade.acceptor_id.is_null(True))))
 
 def validate_given_and_received(given: list[str], received: list[str]) -> str | None:
     if not given:
