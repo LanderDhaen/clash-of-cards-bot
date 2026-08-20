@@ -13,7 +13,7 @@ class TradeSetupView(discord.ui.View):
 
         ## Card Selects
 
-        self.color, cards = TRADE_TYPES[trade_type]
+        name, self.color, cards = TRADE_TYPES[trade_type]
         max_values = len(cards)
 
         self.card_options = [

@@ -42,8 +42,14 @@ class Guild(BaseModel):
         self.trader_role_id = trader_role_id
         self.trade_channel_id = trade_channel_id
         self.save()
-        
 
+    def open_user_trades(self, user_id: int) -> list[Trade]:
+
+        return Trade.select().where(
+            (Trade.guild == self) &
+            (Trade.initiator_id == user_id) &
+            (Trade.acceptor_id.is_null(True))
+        ).order_by(Trade.type.asc(), Trade.trade_id.asc())
 
 def get_guild(guild_id: int) -> Guild | None:
     return Guild.get_or_none(Guild.guild_id == guild_id)
@@ -71,10 +77,10 @@ class TradeType(Enum):
     SUPER_TROOP = 3
 
 TRADE_TYPES = {
-    TradeType.ELIXIR: (discord.Color.pink(), ELIXIR_CARDS),
-    TradeType.DARK_ELIXIR: (discord.Color.dark_purple(), DARK_ELIXIR_CARDS),
-    TradeType.BUILDER_BASE: (discord.Color.blue(), BUILDER_BASE_CARDS),
-    TradeType.SUPER_TROOP: (discord.Color.orange(), SUPER_TROOP_CARDS)
+    TradeType.ELIXIR: ("Elixir", discord.Color.pink(), ELIXIR_CARDS),
+    TradeType.DARK_ELIXIR: ("Duister-elixir", discord.Color.dark_purple(), DARK_ELIXIR_CARDS),
+    TradeType.BUILDER_BASE: ("Bouwersbasis", discord.Color.blue(), BUILDER_BASE_CARDS),
+    TradeType.SUPER_TROOP: ("Supertroepen", discord.Color.orange(), SUPER_TROOP_CARDS)
 }
 
 
@@ -123,6 +129,12 @@ class Trade(BaseModel):
 
 def get_trades() -> list[Trade]:
     return Trade.select()
+
+def get_open_user_trades(guild_id: int, user_id: int) -> list[Trade]:
+    return Trade.select().where(
+        (Trade.guild == guild_id) & 
+        ((Trade.initiator_id == user_id) & 
+         (Trade.acceptor_id.is_null(True))))
 
 def validate_given_and_received(given: list[str], received: list[str]) -> str | None:
     if not given:
